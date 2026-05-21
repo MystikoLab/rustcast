@@ -129,7 +129,7 @@ extern "C-unwind" fn keyboard_event_callback(
         sender.0.try_send(Message::KeyPressed(shortcut)).unwrap();
     }
 
-    unsafe { null_mut() }
+    null_mut()
 }
 
 pub struct CallbackData {
