@@ -1,6 +1,6 @@
 use std::{
     ffi::c_void,
-    ptr::NonNull,
+    ptr::{NonNull, null_mut},
     sync::{Arc, Mutex},
 };
 
@@ -129,7 +129,7 @@ extern "C-unwind" fn keyboard_event_callback(
         sender.0.try_send(Message::KeyPressed(shortcut)).unwrap();
     }
 
-    unsafe { event.as_mut() }
+    unsafe { null_mut() }
 }
 
 pub struct CallbackData {
