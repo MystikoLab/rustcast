@@ -286,14 +286,19 @@ impl Tile {
                             Some(Message::ChangeFocus(ArrowKey::Down, 1))
                         }
                         keyboard::Key::Character(chr) => {
-                            if modifiers.command() && chr.to_string() == "r" {
+                            let s = chr.to_string();
+                            if modifiers.command() && s == "r" {
                                 Some(Message::ReloadConfig)
-                            } else if chr.to_string() == "p" && modifiers.control() {
+                            } else if modifiers.command() {
+                                s.parse::<usize>().ok()
+                                    .filter(|&n| n >= 1 && n <= 9)
+                                    .map(|n| Message::OpenResult((n - 1) as u32))
+                            } else if s == "p" && modifiers.control() {
                                 Some(Message::ChangeFocus(ArrowKey::Up, 1))
-                            } else if chr.to_string() == "n" && modifiers.control() {
+                            } else if s == "n" && modifiers.control() {
                                 Some(Message::ChangeFocus(ArrowKey::Down, 1))
                             } else {
-                                Some(Message::FocusTextInput(Move::Forwards(chr.to_string())))
+                                Some(Message::FocusTextInput(Move::Forwards(s)))
                             }
                         }
                         keyboard::Key::Named(Named::Enter) => Some(Message::OpenFocused),
