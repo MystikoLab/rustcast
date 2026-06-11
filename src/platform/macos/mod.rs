@@ -103,6 +103,25 @@ pub fn is_dark_mode() -> bool {
         .unwrap_or(false)
 }
 
+/// Simulates Cmd+V (paste) targeted at the given process by PID.
+/// Uses CGEventPostToPid so focus transfer timing is irrelevant.
+pub fn simulate_paste(pid: libc::pid_t) {
+    use objc2_core_graphics::{CGEvent, CGEventFlags, CGEventSource, CGEventSourceStateID};
+
+    let source = CGEventSource::new(CGEventSourceStateID::HIDSystemState);
+    let source_ref = source.as_deref();
+    let v_keycode: u16 = 9; // kVK_ANSI_V
+
+    if let Some(keydown) = CGEvent::new_keyboard_event(source_ref, v_keycode, true) {
+        CGEvent::set_flags(Some(&keydown), CGEventFlags::MaskCommand);
+        CGEvent::post_to_pid(pid, Some(&keydown));
+    }
+    if let Some(keyup) = CGEvent::new_keyboard_event(source_ref, v_keycode, false) {
+        CGEvent::set_flags(Some(&keyup), CGEventFlags::MaskCommand);
+        CGEvent::post_to_pid(pid, Some(&keyup));
+    }
+}
+
 /// This is the function that transforms the process to a UI element, and hides the dock icon
 ///
 /// see mostly <https://github.com/electron/electron/blob/e181fd040f72becd135db1fa977622b81da21643/shell/browser/browser_mac.mm#L512C1-L532C2>

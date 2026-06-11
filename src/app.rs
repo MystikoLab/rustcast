@@ -70,6 +70,7 @@ pub enum ResetField {
     HapticFeedback,
     ShowMenubarIcon,
     ClipboardHistory,
+    ClipboardPasteOnSelect,
     MainPage,
     ShowScrollbar,
     ClearOnHide,
@@ -168,6 +169,7 @@ pub enum Message {
     DebouncedSearch(Id),
     CheckEventTap,
     ThemeModeChanged(bool),
+    SimulatePaste(i32),
 }
 
 #[derive(Debug, Clone)]
@@ -191,6 +193,7 @@ pub enum SetConfigFields {
     DebounceDelay(u64),
     SetThemeFields(SetConfigThemeFields),
     SetBufferFields(SetConfigBufferFields),
+    ClipboardPasteOnSelect(bool),
 }
 
 #[derive(Debug, Clone)]

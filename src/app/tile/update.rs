@@ -543,9 +543,25 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
                 _ => Task::done(Message::ReturnFocus),
             };
 
-            if !tile.config.buffer_rules.clear_on_enter || !tile.visible {
+            let paste_on_select_active = tile.config.cbhist_paste_on_select
+                && tile.page == Page::ClipboardHistory
+                && matches!(command, Function::CopyToClipboard(_));
+
+            if (!tile.config.buffer_rules.clear_on_enter && !paste_on_select_active)
+                || !tile.visible
+            {
                 return Task::none();
             }
+
+            let paste_task = if paste_on_select_active {
+                tile.frontmost
+                    .as_ref()
+                    .map(|app| app.processIdentifier())
+                    .map(|pid| Task::done(Message::SimulatePaste(pid)))
+                    .unwrap_or_else(Task::none)
+            } else {
+                Task::none()
+            };
 
             window::latest()
                 .map(|x| x.unwrap())
@@ -553,6 +569,7 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
                 .chain(page_task)
                 .chain(Task::done(Message::ClearSearchQuery))
                 .chain(return_focus_task)
+                .chain(paste_task)
         }
 
         Message::HideWindow(a) => {
@@ -971,6 +988,9 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
                 SetConfigFields::SetBufferFields(SetConfigBufferFields::ClearOnEnter(clear)) => {
                     final_config.buffer_rules.clear_on_enter = clear
                 }
+                SetConfigFields::ClipboardPasteOnSelect(v) => {
+                    final_config.cbhist_paste_on_select = v
+                }
                 SetConfigFields::ToDefault => {
                     final_config = Config::default();
                 }
@@ -1024,6 +1044,9 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
                 ResetField::Modes => tile.config.modes = default.modes,
                 ResetField::SearchDirs => tile.config.search_dirs = default.search_dirs,
                 ResetField::ShellCommands => tile.config.shells = default.shells,
+                ResetField::ClipboardPasteOnSelect => {
+                    tile.config.cbhist_paste_on_select = default.cbhist_paste_on_select
+                }
             }
             Task::none()
         }
@@ -1075,6 +1098,11 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
                     Err(e) => log::error!("Failed to re-create event tap: {e}"),
                 }
             }
+            Task::none()
+        }
+
+        Message::SimulatePaste(pid) => {
+            crate::platform::simulate_paste(pid);
             Task::none()
         }
 

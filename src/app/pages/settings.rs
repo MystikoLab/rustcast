@@ -324,6 +324,29 @@ fn general_tab(config: Box<Config>, theme: crate::config::Theme) -> Column<'stat
     );
 
     let theme_clone = theme.clone();
+    let cbhist_paste_on_select = settings_row_with_reset(
+        Row::from_iter([
+            settings_hint_text(theme.clone(), "Paste on select"),
+            checkbox(config.clone().cbhist_paste_on_select)
+                .style(move |_, _| settings_checkbox_style(&theme_clone))
+                .on_toggle(|input| {
+                    Message::SetConfig(SetConfigFields::ClipboardPasteOnSelect(input))
+                })
+                .into(),
+            notice_item(
+                theme.clone(),
+                "Auto-paste clipboard item after selecting",
+            ),
+        ])
+        .align_y(Alignment::Center)
+        .spacing(SETTINGS_ITEM_COL_SPACING * 2)
+        .padding(SETTINGS_ITEM_PADDING)
+        .height(SETTINGS_ITEM_HEIGHT),
+        ResetField::ClipboardPasteOnSelect,
+        theme.clone(),
+    );
+
+    let theme_clone = theme.clone();
     let auto_suggest = settings_row_with_reset(
         settings_item_column([
             settings_hint_text(theme.clone(), "Suggestions on open"),
@@ -383,6 +406,7 @@ fn general_tab(config: Box<Config>, theme: crate::config::Theme) -> Column<'stat
         haptic,
         tray_icon,
         clipboard_history,
+        cbhist_paste_on_select,
         auto_suggest,
     ])
     .spacing(10)

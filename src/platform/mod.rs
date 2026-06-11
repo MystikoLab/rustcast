@@ -23,6 +23,11 @@ pub fn focus_this_app() {
     self::macos::focus_this_app();
 }
 
+pub fn simulate_paste(pid: i32) {
+    #[cfg(target_os = "macos")]
+    self::macos::simulate_paste(pid);
+}
+
 pub fn transform_process_to_ui_element() {
     #[cfg(target_os = "macos")]
     self::macos::transform_process_to_ui_element();
