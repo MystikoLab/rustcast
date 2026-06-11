@@ -246,6 +246,72 @@ pub fn settings_add_button_style(theme: &ConfigTheme) -> button::Style {
     }
 }
 
+/// Style for settings tab buttons with active/inactive and hover states.
+pub fn settings_tab_style(
+    theme: &ConfigTheme,
+    active: bool,
+    status: button::Status,
+) -> button::Style {
+    let base = theme.bg_color();
+    if active {
+        let bg_alpha = match status {
+            button::Status::Pressed => 0.55,
+            button::Status::Hovered => 0.45,
+            _ => 0.35,
+        };
+        let tc_alpha = match status {
+            button::Status::Pressed => 0.7,
+            _ => 1.0,
+        };
+        button::Style {
+            text_color: theme.text_color(tc_alpha),
+            background: Some(Background::Color(with_alpha(tint(base, 0.12), bg_alpha))),
+            border: Border {
+                color: theme.text_color(0.25),
+                width: 0.5,
+                radius: Radius::new(6.).top(6.),
+            },
+            ..Default::default()
+        }
+    } else {
+        let (bg_opt, text_alpha) = match status {
+            button::Status::Pressed => (
+                Some(Background::Color(with_alpha(tint(base, 0.06), 0.30))),
+                0.7,
+            ),
+            button::Status::Hovered => (
+                Some(Background::Color(with_alpha(tint(base, 0.04), 0.20))),
+                0.9,
+            ),
+            _ => (None, 0.5),
+        };
+        button::Style {
+            text_color: theme.text_color(text_alpha),
+            background: bg_opt,
+            border: Border {
+                color: theme.text_color(0.10),
+                width: 0.0,
+                radius: Radius::new(6.).top(6.),
+            },
+            ..Default::default()
+        }
+    }
+}
+
+/// Clean container style for the settings panel (non-glass, flat).
+pub fn settings_container_style(theme: &ConfigTheme) -> container::Style {
+    container::Style {
+        background: Some(Background::Color(with_alpha(tint(theme.bg_color(), 0.04), 0.25))),
+        border: Border {
+            color: theme.text_color(0.15),
+            width: 0.5,
+            radius: Radius::new(10),
+        },
+        text_color: Some(theme.text_color(1.0)),
+        ..Default::default()
+    }
+}
+
 pub fn settings_checkbox_style(theme: &ConfigTheme) -> checkbox::Style {
     checkbox::Style {
         background: Background::Color(Color::TRANSPARENT),

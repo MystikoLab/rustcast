@@ -199,6 +199,8 @@ pub struct Tile {
     page: Page,
     pub height: f32,
     pub file_search_sender: Option<tokio::sync::watch::Sender<(String, Vec<String>)>>,
+    pub file_dialog_open: bool,
+    pub settings_tab: crate::app::SettingsTab,
     debouncer: Debouncer,
 }
 

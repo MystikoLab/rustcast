@@ -41,6 +41,50 @@ pub enum Page {
     Settings,
 }
 
+/// The settings panel tabs
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum SettingsTab {
+    General,
+    Appearance,
+    Commands,
+}
+
+/// Actions that open a native file dialog
+#[derive(Debug, Clone)]
+pub enum FileDialogAction {
+    PickModeFile(String),
+    EditSearchDir(String),
+    AddSearchDir,
+}
+
+/// Config fields that can be individually reset to default
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum ResetField {
+    ToggleHotkey,
+    ClipboardHotkey,
+    Placeholder,
+    SearchUrl,
+    DebounceDelay,
+    StartAtLogin,
+    AutoUpdate,
+    HapticFeedback,
+    ShowMenubarIcon,
+    ClipboardHistory,
+    MainPage,
+    ShowScrollbar,
+    ClearOnHide,
+    ClearOnEnter,
+    ShowIcons,
+    Font,
+    EventDuration,
+    TextColor,
+    BackgroundColor,
+    Aliases,
+    Modes,
+    SearchDirs,
+    ShellCommands,
+}
+
 impl std::fmt::Display for Page {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(match self.to_owned() {
@@ -98,8 +142,11 @@ pub enum Message {
     RunFunction(Function),
     OpenFocused,
     SetConfig(SetConfigFields),
-    OpenFileDialogue(String),
+    OpenFileDialog(FileDialogAction),
+    FileDialogResult(Option<Box<Message>>),
     ReturnFocus,
+    SwitchSettingsTab(SettingsTab),
+    ResetField(ResetField),
     EscKeyPressed(Id),
     UpdateEvents,
     ClearSearchResults,

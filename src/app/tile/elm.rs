@@ -19,7 +19,7 @@ use rayon::slice::ParallelSliceMut;
 use crate::app::pages::emoji::emoji_page;
 use crate::app::pages::settings::settings_page;
 use crate::app::tile::{AppIndex, Hotkeys};
-use crate::app::{DEFAULT_WINDOW_HEIGHT, ToApp, ToApps};
+use crate::app::{DEFAULT_WINDOW_HEIGHT, SettingsTab, ToApp, ToApps};
 use crate::config::Theme;
 use crate::debounce::Debouncer;
 use crate::platform::macos::events::Event;
@@ -95,6 +95,8 @@ pub fn new(hotkeys: Hotkeys, config: &Config) -> (Tile, Task<Message>) {
             page: Page::Main,
             height: DEFAULT_WINDOW_HEIGHT,
             file_search_sender: None,
+            file_dialog_open: false,
+            settings_tab: SettingsTab::General,
             debouncer: Debouncer::new(config.debounce_delay),
         },
         Task::batch([open.map(|_| Message::OpenWindow)]),
@@ -141,7 +143,7 @@ pub fn view(tile: &Tile, wid: window::Id) -> Element<'_, Message> {
                     .collect(),
                 tile.focus_id,
             ),
-            Page::Settings => settings_page(tile.config.clone()),
+            Page::Settings => settings_page(tile.config.clone(), tile.settings_tab),
             Page::FileSearch | Page::Main => container(Column::from_iter(
                 tile.results.iter().enumerate().map(|(i, app)| {
                     app.clone().render(
