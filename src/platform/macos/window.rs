@@ -80,18 +80,73 @@ pub fn rect_for(pos: &TilePosition, vf: Rect) -> Rect {
     let hh = vf.h / 2.0;
     let tw = vf.w / 3.0;
     match pos {
-        TilePosition::LeftHalf => Rect { x: vf.x, y: vf.y, w: hw, h: vf.h },
-        TilePosition::RightHalf => Rect { x: vf.x + hw, y: vf.y, w: hw, h: vf.h },
+        TilePosition::LeftHalf => Rect {
+            x: vf.x,
+            y: vf.y,
+            w: hw,
+            h: vf.h,
+        },
+        TilePosition::RightHalf => Rect {
+            x: vf.x + hw,
+            y: vf.y,
+            w: hw,
+            h: vf.h,
+        },
         // In Cocoa coords +y is up, so "top" half lives at higher y
-        TilePosition::TopHalf => Rect { x: vf.x, y: vf.y + hh, w: vf.w, h: hh },
-        TilePosition::BottomHalf => Rect { x: vf.x, y: vf.y, w: vf.w, h: hh },
-        TilePosition::TopLeft => Rect { x: vf.x, y: vf.y + hh, w: hw, h: hh },
-        TilePosition::TopRight => Rect { x: vf.x + hw, y: vf.y + hh, w: hw, h: hh },
-        TilePosition::BottomLeft => Rect { x: vf.x, y: vf.y, w: hw, h: hh },
-        TilePosition::BottomRight => Rect { x: vf.x + hw, y: vf.y, w: hw, h: hh },
-        TilePosition::LeftThird => Rect { x: vf.x, y: vf.y, w: tw, h: vf.h },
-        TilePosition::CenterThird => Rect { x: vf.x + tw, y: vf.y, w: tw, h: vf.h },
-        TilePosition::RightThird => Rect { x: vf.x + tw * 2.0, y: vf.y, w: tw, h: vf.h },
+        TilePosition::TopHalf => Rect {
+            x: vf.x,
+            y: vf.y + hh,
+            w: vf.w,
+            h: hh,
+        },
+        TilePosition::BottomHalf => Rect {
+            x: vf.x,
+            y: vf.y,
+            w: vf.w,
+            h: hh,
+        },
+        TilePosition::TopLeft => Rect {
+            x: vf.x,
+            y: vf.y + hh,
+            w: hw,
+            h: hh,
+        },
+        TilePosition::TopRight => Rect {
+            x: vf.x + hw,
+            y: vf.y + hh,
+            w: hw,
+            h: hh,
+        },
+        TilePosition::BottomLeft => Rect {
+            x: vf.x,
+            y: vf.y,
+            w: hw,
+            h: hh,
+        },
+        TilePosition::BottomRight => Rect {
+            x: vf.x + hw,
+            y: vf.y,
+            w: hw,
+            h: hh,
+        },
+        TilePosition::LeftThird => Rect {
+            x: vf.x,
+            y: vf.y,
+            w: tw,
+            h: vf.h,
+        },
+        TilePosition::CenterThird => Rect {
+            x: vf.x + tw,
+            y: vf.y,
+            w: tw,
+            h: vf.h,
+        },
+        TilePosition::RightThird => Rect {
+            x: vf.x + tw * 2.0,
+            y: vf.y,
+            w: tw,
+            h: vf.h,
+        },
         TilePosition::Maximize => vf,
     }
 }
@@ -138,7 +193,10 @@ pub fn tile_focused_window(pid: pid_t, pos: &TilePosition) -> bool {
 
         // Read current window size for center calculation
         let mut sz_ref: CFTypeRef = std::ptr::null();
-        let mut raw_sz = RawSize { width: 0.0, height: 0.0 };
+        let mut raw_sz = RawSize {
+            width: 0.0,
+            height: 0.0,
+        };
         if AXUIElementCopyAttributeValue(win, attr_size, &mut sz_ref) == K_AX_SUCCESS
             && !sz_ref.is_null()
         {
@@ -208,8 +266,14 @@ pub fn tile_focused_window(pid: pid_t, pos: &TilePosition) -> bool {
 
         // Flip target Cocoa rect to AX coords
         let ax_y = primary_h - (target.y + target.h);
-        let new_pos = RawPoint { x: target.x, y: ax_y };
-        let new_sz = RawSize { width: target.w, height: target.h };
+        let new_pos = RawPoint {
+            x: target.x,
+            y: ax_y,
+        };
+        let new_sz = RawSize {
+            width: target.w,
+            height: target.h,
+        };
 
         let sz_val = AXValueCreate(
             K_AX_VALUE_CGSIZE,
