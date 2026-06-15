@@ -199,7 +199,7 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
                     sender,
                     tile.update_available,
                 ))));
-            if tile.config.show_trayicon {
+            } else if tile.config.show_trayicon {
                 tile.tray_icon = Some(menu_icon(tile.config.clone(), sender));
             }
             Task::none()
