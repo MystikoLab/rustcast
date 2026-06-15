@@ -1,2 +1,4 @@
 /target
 .DS_Store
+# ignore bin in built app
+assets/macos/RustCast.app/Contents/MacOS/rustcast
