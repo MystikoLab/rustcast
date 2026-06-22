@@ -27,6 +27,16 @@
   </a>
 </p>
 
+<p align="center">
+  <a href="https://sxitch.app">
+    <img src="https://sxitch.app/sxitch_icon_nobg_white.png" width="32" height="32" alt="Sxitch" style="vertical-align: middle;" />
+    &nbsp;
+    <strong>Like RustCast? Check out Sxitch</strong> — my paid macOS app, built with the same obsession for speed.
+    &nbsp;
+    <a href="https://sxitch.app">sxitch.app →</a>
+  </a>
+</p>
+
 > [Those who sponsor me also get a personal easter egg inside RustCast](https://github.com/sponsors/RustCastLabs)
 
 **Config docs:** https://github.com/RustCastLabs/rustcast/wiki
