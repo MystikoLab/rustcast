@@ -33,7 +33,6 @@
     &nbsp;
     <strong>Like RustCast? Check out Sxitch</strong>
     &nbsp;
-    <a href="https://sxitch.app">sxitch.app →</a>
   </a>
 </p>
 
