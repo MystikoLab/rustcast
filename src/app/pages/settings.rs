@@ -5,11 +5,14 @@ use std::collections::HashMap;
 use iced::Border;
 use iced::border::Radius;
 use iced::widget::Container;
+use iced::widget::Scrollable;
 use iced::widget::Slider;
 use iced::widget::Space;
 use iced::widget::TextInput;
 use iced::widget::button;
 use iced::widget::radio;
+use iced::widget::scrollable::Direction;
+use iced::widget::scrollable::Scrollbar;
 use iced::widget::text_input;
 use iced::widget::toggler;
 
@@ -92,12 +95,15 @@ pub fn settings_page(config: Config, settings_tab: SettingsTab) -> Element<'stat
         .into(),
     ]);
 
-    let contents_container = Container::new(contents_column)
-        .style(move |_| settings_contents_container_style(&theme))
-        .height(Length::Fill)
-        .width(Length::Fill)
-        .padding(12)
-        .align_x(Alignment::Center);
+    let contents_container = Container::new(Scrollable::with_direction(
+        contents_column,
+        Direction::Vertical(Scrollbar::hidden()),
+    ))
+    .style(move |_| settings_contents_container_style(&theme))
+    .height(Length::Fill)
+    .width(Length::Fill)
+    .padding(12)
+    .align_x(Alignment::Center);
 
     let items = Row::from_iter([tabs_container.into(), contents_container.into()]);
 
@@ -244,7 +250,7 @@ fn general_tab(config: Box<Config>, theme: crate::config::Theme) -> Column<'stat
         settings_item_row([
             settings_hint_text(
                 theme.clone(),
-                "Set the debounce time",
+                "Set the debounce time (ms)",
                 Some("File search response time"),
             ),
             Space::new().width(Length::Fill).into(),
@@ -337,56 +343,49 @@ fn general_tab(config: Box<Config>, theme: crate::config::Theme) -> Column<'stat
     );
 
     let theme_clone = theme.clone();
-    let auto_suggest = settings_row_with_reset(
-        settings_item_column([
-            settings_hint_text(
-                theme.clone(),
-                "Suggestions on open",
-                Some("What an empty query should show"),
-            ),
-            settings_item_row([
-                radio(
-                    "Favourites",
-                    MainPage::Favourites,
-                    Some(config.main_page),
-                    |page| Message::SetConfig(SetConfigFields::SetPage(page)),
-                )
-                .style({
-                    let theme_clone = theme_clone.clone();
-                    move |_, _| settings_radio_button_style(&theme_clone.clone())
-                })
-                .into(),
-                radio(
-                    "Frequents",
-                    MainPage::FrequentlyUsed,
-                    Some(config.main_page),
-                    |page| Message::SetConfig(SetConfigFields::SetPage(page)),
-                )
-                .style({
-                    let theme_clone = theme_clone.clone();
-                    move |_, _| settings_radio_button_style(&theme_clone.clone())
-                })
-                .into(),
-                radio("Events", MainPage::Events, Some(config.main_page), |page| {
-                    Message::SetConfig(SetConfigFields::SetPage(page))
-                })
-                .style({
-                    let theme_clone = theme_clone.clone();
-                    move |_, _| settings_radio_button_style(&theme_clone.clone())
-                })
-                .into(),
-                radio("Nothing", MainPage::Blank, Some(config.main_page), |page| {
-                    Message::SetConfig(SetConfigFields::SetPage(page))
-                })
-                .style(move |_, _| settings_radio_button_style(&theme_clone.clone()))
-                .into(),
-            ])
-            .spacing(30)
+    let auto_suggest = settings_row_without_reset(settings_item_row([
+        settings_hint_text(theme.clone(), "Suggestions on open", None::<String>),
+        Space::new().width(Length::Fill).into(),
+        settings_item_row([
+            radio(
+                "Favourites",
+                MainPage::Favourites,
+                Some(config.main_page),
+                |page| Message::SetConfig(SetConfigFields::SetPage(page)),
+            )
+            .style({
+                let theme_clone = theme_clone.clone();
+                move |_, _| settings_radio_button_style(&theme_clone.clone())
+            })
             .into(),
-        ]),
-        ResetField::MainPage,
-        theme.clone(),
-    );
+            radio(
+                "Frequents",
+                MainPage::FrequentlyUsed,
+                Some(config.main_page),
+                |page| Message::SetConfig(SetConfigFields::SetPage(page)),
+            )
+            .style({
+                let theme_clone = theme_clone.clone();
+                move |_, _| settings_radio_button_style(&theme_clone.clone())
+            })
+            .into(),
+            radio("Events", MainPage::Events, Some(config.main_page), |page| {
+                Message::SetConfig(SetConfigFields::SetPage(page))
+            })
+            .style({
+                let theme_clone = theme_clone.clone();
+                move |_, _| settings_radio_button_style(&theme_clone.clone())
+            })
+            .into(),
+            radio("Nothing", MainPage::Blank, Some(config.main_page), |page| {
+                Message::SetConfig(SetConfigFields::SetPage(page))
+            })
+            .style(move |_, _| settings_radio_button_style(&theme_clone.clone()))
+            .into(),
+        ])
+        .spacing(30)
+        .into(),
+    ]));
 
     Column::from_iter([
         hotkey,
@@ -407,8 +406,9 @@ fn general_tab(config: Box<Config>, theme: crate::config::Theme) -> Column<'stat
 
 fn appearance_tab(config: Box<Config>, theme: crate::config::Theme) -> Column<'static, Message> {
     let theme_clone = theme.clone();
-    let theme_mode_setting = settings_row_without_reset(settings_item_column([
+    let theme_mode_setting = settings_row_without_reset(settings_item_row([
         settings_hint_text(theme.clone(), "Theme mode", None::<String>),
+        Space::new().width(Length::Fill).into(),
         settings_item_row([
             radio(
                 "Dark",
@@ -841,14 +841,6 @@ fn settings_hint_text(
     }
 
     container(content).into()
-}
-
-fn settings_item_column(
-    elems: impl IntoIterator<Item = Element<'static, Message>>,
-) -> Column<'static, Message> {
-    Column::from_iter(elems)
-        .spacing(SETTINGS_ITEM_COL_SPACING)
-        .padding(SETTINGS_ITEM_PADDING)
 }
 
 fn settings_item_row(
