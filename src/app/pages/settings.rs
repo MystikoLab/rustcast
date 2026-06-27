@@ -47,6 +47,7 @@ use crate::{
 const SETTINGS_ITEM_PADDING: u16 = 4;
 const SETTINGS_ITEM_HEIGHT: u32 = 55;
 const SETTINGS_ITEM_COL_SPACING: u32 = 3;
+const SETTINGS_INPUT_WIDTH: f32 = 250.0;
 
 pub fn settings_page(config: Config, settings_tab: SettingsTab) -> Element<'static, Message> {
     let config = Box::new(config.clone());
@@ -73,7 +74,7 @@ pub fn settings_page(config: Config, settings_tab: SettingsTab) -> Element<'stat
     let tabs_container = Container::new(tabs_column)
         .style(move |_| settings_tabs_container_style(&theme_clone))
         .height(Length::Fill)
-        .width(Length::Fixed(250.0))
+        .width(Length::Fixed(SETTINGS_INPUT_WIDTH))
         .padding(12)
         .align_x(Alignment::Center);
 
@@ -173,8 +174,8 @@ fn general_tab(config: Box<Config>, theme: crate::config::Theme) -> Column<'stat
             Space::new().width(Length::Fill).into(),
             text_input("Toggle Hotkey", &config.toggle_hotkey)
                 .on_input(|input| Message::SetConfig(SetConfigFields::ToggleHotkey(input.clone())))
-                .on_submit(Message::WriteConfig(false))
-                .width(Length::Fixed(250.0))
+                .on_submit(Message::WriteConfig)
+                .width(Length::Fixed(SETTINGS_INPUT_WIDTH))
                 .style(move |_, _| settings_text_input_item_style(&theme_clone))
                 .into(),
         ]),
@@ -195,8 +196,8 @@ fn general_tab(config: Box<Config>, theme: crate::config::Theme) -> Column<'stat
                 .on_input(|input| {
                     Message::SetConfig(SetConfigFields::ClipboardHotkey(input.clone()))
                 })
-                .on_submit(Message::WriteConfig(false))
-                .width(Length::Fixed(250.0))
+                .on_submit(Message::WriteConfig)
+                .width(Length::Fixed(SETTINGS_INPUT_WIDTH))
                 .style(move |_, _| settings_text_input_item_style(&theme_clone))
                 .into(),
         ]),
@@ -215,8 +216,8 @@ fn general_tab(config: Box<Config>, theme: crate::config::Theme) -> Column<'stat
             Space::new().width(Length::Fill).into(),
             text_input("Set Placeholder", &config.placeholder)
                 .on_input(|input| Message::SetConfig(SetConfigFields::PlaceHolder(input.clone())))
-                .on_submit(Message::WriteConfig(false))
-                .width(Length::Fixed(250.0))
+                .on_submit(Message::WriteConfig)
+                .width(Length::Fixed(SETTINGS_INPUT_WIDTH))
                 .style(move |_, _| settings_text_input_item_style(&theme_clone))
                 .into(),
         ]),
@@ -235,8 +236,8 @@ fn general_tab(config: Box<Config>, theme: crate::config::Theme) -> Column<'stat
             Space::new().width(Length::Fill).into(),
             text_input("Set Search URL", &config.search_url)
                 .on_input(|input| Message::SetConfig(SetConfigFields::SearchUrl(input.clone())))
-                .on_submit(Message::WriteConfig(false))
-                .width(Length::Fixed(250.0))
+                .on_submit(Message::WriteConfig)
+                .width(Length::Fixed(SETTINGS_INPUT_WIDTH))
                 .style(move |_, _| settings_text_input_item_style(&theme_clone))
                 .into(),
         ]),
@@ -259,8 +260,8 @@ fn general_tab(config: Box<Config>, theme: crate::config::Theme) -> Column<'stat
                     let delay = input.parse::<u64>().unwrap_or(current_delay);
                     Message::SetConfig(SetConfigFields::DebounceDelay(delay))
                 })
-                .on_submit(Message::WriteConfig(false))
-                .width(Length::Fixed(250.0))
+                .on_submit(Message::WriteConfig)
+                .width(Length::Fixed(SETTINGS_INPUT_WIDTH))
                 .style(move |_, _| settings_text_input_item_style(&theme_clone))
                 .into(),
         ]),
@@ -312,7 +313,7 @@ fn general_tab(config: Box<Config>, theme: crate::config::Theme) -> Column<'stat
 
     let clipboard_history = settings_row_without_reset(
         Row::from_iter([
-            settings_hint_text(theme.clone(), "Enable Clipboard history", None::<String>),
+            settings_hint_text(theme.clone(), "Enable clipboard history", None::<String>),
             Space::new().width(Length::Fill).into(),
             toggler(config.clone().cbhist)
                 .style(move |_, status| settings_toggle_style(status))
@@ -474,7 +475,7 @@ fn appearance_tab(config: Box<Config>, theme: crate::config::Theme) -> Column<'s
         settings_hint_text(
             theme.clone(),
             "Clear on hide",
-            Some("If the query should be cleared when rustcast is hidden"),
+            Some("Clear query when rustcast is hidden"),
         ),
         Space::new().width(Length::Fill).into(),
         toggler(config.clone().buffer_rules.clear_on_hide)
@@ -516,7 +517,7 @@ fn appearance_tab(config: Box<Config>, theme: crate::config::Theme) -> Column<'s
     let theme_clone = theme.clone();
     let font_family = settings_row_with_reset(
         settings_item_row([
-            settings_hint_text(theme.clone(), "Set Font family", None::<String>),
+            settings_hint_text(theme.clone(), "Font family", None::<String>),
             Space::new().width(Length::Fill).into(),
             text_input(
                 "Font family",
@@ -527,8 +528,8 @@ fn appearance_tab(config: Box<Config>, theme: crate::config::Theme) -> Column<'s
                     input,
                 )))
             })
-            .on_submit(Message::WriteConfig(false))
-            .width(Length::Fixed(250.0))
+            .on_submit(Message::WriteConfig)
+            .width(Length::Fixed(SETTINGS_INPUT_WIDTH))
             .style(move |_, _| settings_text_input_item_style(&theme_clone))
             .into(),
         ]),
@@ -541,7 +542,7 @@ fn appearance_tab(config: Box<Config>, theme: crate::config::Theme) -> Column<'s
         settings_item_row([
             settings_hint_text(
                 theme.clone(),
-                "Set Event duration",
+                "Event duration",
                 Some("Minutes from now events should be displayed"),
             ),
             Space::new().width(Length::Fill).into(),
@@ -549,8 +550,8 @@ fn appearance_tab(config: Box<Config>, theme: crate::config::Theme) -> Column<'s
                 .on_input(move |input: String| {
                     Message::SetConfig(SetConfigFields::SetEventDuration(input))
                 })
-                .on_submit(Message::WriteConfig(false))
-                .width(Length::Fixed(250.0))
+                .on_submit(Message::WriteConfig)
+                .width(Length::Fixed(SETTINGS_INPUT_WIDTH))
                 .style(move |_, _| settings_text_input_item_style(&theme_clone))
                 .into(),
         ]),
@@ -623,7 +624,6 @@ fn appearance_tab(config: Box<Config>, theme: crate::config::Theme) -> Column<'s
                 .style(move |_, _| settings_slider_style(&theme_clone_3))
                 .width((WINDOW_WIDTH / 5.) * 4.)
                 .into(),
-                notice_item(theme.clone(), "Text colour in RGB format"),
             ])
             .spacing(7)
             .width(Length::Fill)
@@ -699,7 +699,6 @@ fn appearance_tab(config: Box<Config>, theme: crate::config::Theme) -> Column<'s
                 .style(move |_, _| settings_slider_style(&theme_clone_3))
                 .width((WINDOW_WIDTH / 5.) * 4.)
                 .into(),
-                notice_item(theme.clone(), "Background colour in RGB format"),
             ])
             .spacing(7)
             .width(Length::Fill)
@@ -785,7 +784,7 @@ fn savebutton(theme: Theme) -> Element<'static, Message> {
     )
     .style(move |_, _| settings_save_button_style(&theme))
     .width(Length::Fill)
-    .on_press(Message::WriteConfig(true))
+    .on_press(Message::WriteConfig)
     .into()
 }
 
@@ -972,7 +971,7 @@ fn text_input_cell(text: String, theme: &Theme, placeholder: &str) -> TextInput<
     text_input(placeholder, &text)
         .font(theme.font())
         .padding(5)
-        .on_submit(Message::WriteConfig(false))
+        .on_submit(Message::WriteConfig)
 }
 
 fn modes_item(modes: HashMap<String, String>, theme: &Theme) -> Element<'static, Message> {

@@ -542,6 +542,10 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
             if tile.file_dialog_open {
                 return Task::none();
             }
+            if tile.settings_window == Some(a) {
+                tile.settings_window = None;
+                return Task::none();
+            }
             info!("Hiding RustCast window");
             tile.visible = false;
             tile.focused = false;
@@ -1009,7 +1013,7 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
             }
             Task::none()
         }
-        Message::WriteConfig(page_switch) => {
+        Message::WriteConfig => {
             let config_file_path =
                 std::env::var("HOME").unwrap_or("".to_string()) + "/.config/rustcast/config.toml";
 
@@ -1032,14 +1036,7 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
                 })
                 .ok();
 
-            Task::batch([
-                Task::done(Message::ReloadConfig),
-                if page_switch {
-                    Task::done(Message::SwitchToPage(Page::Main))
-                } else {
-                    Task::none()
-                },
-            ])
+            Task::batch([Task::done(Message::ReloadConfig), Task::none()])
         }
         Message::ClearClipboardHistory => {
             tile.clipboard_content.clear();

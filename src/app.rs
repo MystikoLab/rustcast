@@ -126,7 +126,7 @@ pub enum Editable<T> {
 #[derive(Debug, Clone)]
 pub enum Message {
     UriReceived(String),
-    WriteConfig(bool),
+    WriteConfig,
     SaveRanking,
     ToggleAutoStartup(bool),
     LoadRanking,
