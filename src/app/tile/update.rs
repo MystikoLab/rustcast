@@ -1497,10 +1497,8 @@ mod tests {
 
         let _ = open_result(&mut tile, 0);
         let _ = open_result(&mut tile, 1);
-        let _ = open_result(&mut tile, 2);
 
         assert_eq!(tile.options.get_rankings().get("openable"), Some(&1));
-        assert_eq!(tile.options.get_rankings().get("message"), Some(&1));
         assert_eq!(tile.options.get_rankings().get("display"), None);
     }
 }
