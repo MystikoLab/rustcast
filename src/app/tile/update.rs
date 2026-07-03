@@ -1440,6 +1440,7 @@ mod tests {
             hotkeys: Hotkeys {
                 toggle: Shortcut::parse("alt+space").unwrap(),
                 clipboard_hotkey: Shortcut::parse("cmd+shift+c").unwrap(),
+                hyperkey: None,
                 shells: HashMap::new(),
                 handle: None,
             },
