@@ -2,8 +2,9 @@
 use crate::config::Theme as ConfigTheme;
 use iced::Shadow;
 use iced::border::Radius;
+use iced::overlay::menu::{self, Menu};
 use iced::widget::toggler::Status;
-use iced::widget::{button, container, radio, scrollable, slider, toggler};
+use iced::widget::{button, container, pick_list, radio, scrollable, slider, toggler};
 use iced::{Background, Border, Color, widget::text_input};
 
 /// Helper: mix base color with white (simple “tint”)
@@ -36,6 +37,35 @@ pub fn rustcast_text_input_style(theme: &ConfigTheme) -> text_input::Style {
         placeholder: theme.text_color(0.2),
         value: theme.text_color(0.9),
         selection: theme.text_color(0.2),
+    }
+}
+
+pub fn picklist_style(theme: &ConfigTheme, _: pick_list::Status) -> pick_list::Style {
+    pick_list::Style {
+        text_color: (theme.text_color(1.)),
+        placeholder_color: with_alpha(theme.bg_color(), 1.),
+        handle_color: with_alpha(theme.bg_color(), 1.),
+        background: Background::Color(with_alpha(theme.bg_color(), 1.)),
+        border: Border {
+            color: theme.text_color(0.3),
+            width: 0.5,
+            radius: Radius::new(10),
+        },
+    }
+}
+
+pub fn picklist_menu_style(theme: &ConfigTheme) -> menu::Style {
+    menu::Style {
+        background: Background::Color(with_alpha(theme.bg_color(), 1.)),
+        border: Border {
+            color: theme.text_color(0.3),
+            width: 0.5,
+            radius: Radius::new(10),
+        },
+        text_color: theme.text_color(0.5),
+        selected_text_color: theme.text_color(1.0),
+        selected_background: Background::Color(tint(with_alpha(theme.bg_color(), 1.), 0.1)),
+        shadow: Shadow::default(),
     }
 }
 
