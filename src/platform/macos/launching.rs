@@ -176,7 +176,7 @@ pub fn global_handler(sender: ExtSender, targets: Vec<Shortcut>) -> Result<Event
     })
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Copy, Eq, Hash)]
 pub struct Shortcut {
     pub key_code: Option<u16>,
     pub mods: Option<usize>,

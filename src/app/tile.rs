@@ -26,7 +26,7 @@ use iced::{event, window};
 
 use log::{info, warn};
 use objc2::rc::Retained;
-use objc2_app_kit::NSRunningApplication;
+use objc2_app_kit::{NSPickerTouchBarItemControlRepresentation, NSRunningApplication};
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use rayon::slice::ParallelSliceMut;
 use tokio::io::{AsyncBufReadExt, AsyncRead};
@@ -214,12 +214,16 @@ pub struct Hotkeys {
     pub handle: Option<EventTapHandle>,
     pub toggle: Shortcut,
     pub clipboard_hotkey: Shortcut,
+    pub hyperkey: Option<Shortcut>,
     pub shells: HashMap<Shortcut, Shelly>,
 }
 
 impl Hotkeys {
     pub fn all_hotkeys(&self) -> Vec<Shortcut> {
         let mut a = vec![self.toggle.clone(), self.clipboard_hotkey.clone()];
+        if let Some(hyperkey_shortcut) = self.hyperkey {
+            a.push(hyperkey_shortcut);
+        }
         a.extend(
             self.shells
                 .keys()

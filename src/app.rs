@@ -177,6 +177,7 @@ pub enum SetConfigFields {
     ToDefault,
     ToggleHotkey(String),
     ClipboardHotkey(String),
+    HyperkeyHotkey(String),
     PlaceHolder(String),
     SearchUrl(String),
     ClipboardHistory(bool),

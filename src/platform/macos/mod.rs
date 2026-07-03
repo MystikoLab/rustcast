@@ -8,6 +8,7 @@ pub mod urlscheme;
 pub mod window;
 
 use iced::wgpu::rwh::WindowHandle;
+use objc2_core_graphics::CGEventSource;
 
 pub(super) use self::discovery::get_installed_apps;
 pub(super) use self::haptics::perform_haptic;
@@ -123,6 +124,35 @@ pub fn simulate_paste(pid: libc::pid_t) {
     }
 }
 
+pub fn send_hyperkey_event() {
+    use objc2_core_graphics::{
+        CGEvent, CGEventFlags, CGEventSource, CGEventSourceStateID, CGEventTapLocation,
+    };
+
+    let source = CGEventSource::new(CGEventSourceStateID::HIDSystemState);
+    let source_ref = source.as_deref();
+
+    // Use a keycode that won't interfere - 0xFF or a null keycode
+    // Alternatively use a specific key like F18 (0x4F) if you want a real key
+    let keycode: u16 = 0; // kVK_ANSI_A as placeholder, or use your target key
+
+    let hyper_flags = CGEventFlags::MaskCommand
+        | CGEventFlags::MaskAlternate   // OPT
+        | CGEventFlags::MaskShift
+        | CGEventFlags::MaskControl;
+
+    // Key down
+    if let Some(keydown) = CGEvent::new_keyboard_event(source_ref, keycode, true) {
+        CGEvent::set_flags(Some(&keydown), hyper_flags);
+        CGEvent::post(CGEventTapLocation::HIDEventTap, Some(&keydown));
+    }
+
+    // Key up
+    if let Some(keyup) = CGEvent::new_keyboard_event(source_ref, keycode, false) {
+        CGEvent::set_flags(Some(&keyup), hyper_flags);
+        CGEvent::post(CGEventTapLocation::HIDEventTap, Some(&keyup));
+    }
+}
 /// This is the function that transforms the process to a UI element, and hides the dock icon
 ///
 /// see mostly <https://github.com/electron/electron/blob/e181fd040f72becd135db1fa977622b81da21643/shell/browser/browser_mac.mm#L512C1-L532C2>
