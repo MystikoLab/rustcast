@@ -121,7 +121,7 @@ extern "C-unwind" fn keyboard_event_callback(
         _ => return unsafe { event.as_mut() },
     };
 
-    if !data.targets.iter().any(|t| *t == shortcut) {
+    if !data.targets.contains(&shortcut) {
         return unsafe { event.as_mut() };
     }
 

@@ -93,16 +93,12 @@ impl std::fmt::Display for MainPage {
 /// The mode for the theme (dark, light, or follow system)
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq, Copy)]
 #[serde(rename_all = "lowercase")]
+#[derive(Default)]
 pub enum ThemeMode {
+    #[default]
     Dark,
     Light,
     System,
-}
-
-impl Default for ThemeMode {
-    fn default() -> Self {
-        ThemeMode::Dark
-    }
 }
 
 impl ThemeMode {

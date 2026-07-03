@@ -513,12 +513,12 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
             ])
         }
         Message::RunFunction(command) => {
-            if let Function::TileWindow(pos) = &command {
-                if let Some(pid) = tile.frontmost.as_ref().map(|a| a.processIdentifier()) {
-                    let ok = crate::platform::macos::window::tile_focused_window(pid, pos);
-                    if !ok && tile.config.haptic_feedback {
-                        perform_haptic(HapticPattern::Alignment);
-                    }
+            if let Function::TileWindow(pos) = &command
+                && let Some(pid) = tile.frontmost.as_ref().map(|a| a.processIdentifier())
+            {
+                let ok = crate::platform::macos::window::tile_focused_window(pid, pos);
+                if !ok && tile.config.haptic_feedback {
+                    perform_haptic(HapticPattern::Alignment);
                 }
             }
             command.execute(&tile.config);

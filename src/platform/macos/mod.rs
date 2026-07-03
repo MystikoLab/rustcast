@@ -8,7 +8,6 @@ pub mod urlscheme;
 pub mod window;
 
 use iced::wgpu::rwh::WindowHandle;
-use objc2_core_graphics::CGEventSource;
 
 pub(super) use self::discovery::get_installed_apps;
 pub(super) use self::haptics::perform_haptic;

@@ -26,7 +26,7 @@ use iced::{event, window};
 
 use log::{info, warn};
 use objc2::rc::Retained;
-use objc2_app_kit::{NSPickerTouchBarItemControlRepresentation, NSRunningApplication};
+use objc2_app_kit::NSRunningApplication;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use rayon::slice::ParallelSliceMut;
 use tokio::io::{AsyncBufReadExt, AsyncRead};
@@ -220,7 +220,7 @@ pub struct Hotkeys {
 
 impl Hotkeys {
     pub fn all_hotkeys(&self) -> Vec<Shortcut> {
-        let mut a = vec![self.toggle.clone(), self.clipboard_hotkey.clone()];
+        let mut a = vec![self.toggle, self.clipboard_hotkey];
         if let Some(hyperkey_shortcut) = self.hyperkey {
             a.push(hyperkey_shortcut);
         }
@@ -300,7 +300,7 @@ impl Tile {
                             } else if modifiers.command() {
                                 s.parse::<usize>()
                                     .ok()
-                                    .filter(|&n| n >= 1 && n <= 9)
+                                    .filter(|&n| (1..=9).contains(&n))
                                     .map(|n| Message::OpenResult((n - 1) as u32))
                             } else if s == "p" && modifiers.control() {
                                 Some(Message::ChangeFocus(ArrowKey::Up, 1))
