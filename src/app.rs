@@ -3,7 +3,7 @@ use std::collections::HashMap;
 
 use crate::app::apps::{App, AppCommand, ICNS_ICON};
 use crate::commands::Function;
-use crate::config::{Config, MainPage, Shelly, ThemeMode};
+use crate::config::{Config, MainPage, Position, Shelly, ThemeMode};
 use crate::debounce::DebouncePolicy;
 use crate::platform::macos::launching::Shortcut;
 use crate::utils::icns_data_to_handle;
@@ -177,6 +177,7 @@ pub enum SetConfigFields {
     ToDefault,
     ToggleHotkey(String),
     ClipboardHotkey(String),
+    SetPosition(Position),
     PlaceHolder(String),
     SearchUrl(String),
     ClipboardHistory(bool),

@@ -8,6 +8,11 @@ pub mod urlscheme;
 pub mod window;
 
 use iced::wgpu::rwh::WindowHandle;
+use objc2::Message;
+use objc2::rc::Retained;
+use objc2_app_kit::{NSEvent, NSScreen};
+
+use crate::config::Position;
 
 pub(super) use self::discovery::get_installed_apps;
 pub(super) use self::haptics::perform_haptic;
@@ -48,8 +53,29 @@ pub(super) fn set_activation_policy_accessory() {
     app.setActivationPolicy(NSApplicationActivationPolicy::Accessory);
 }
 
+pub fn screen_with_mouse() -> Retained<NSScreen> {
+    use objc2::MainThreadMarker;
+
+    let mtm = MainThreadMarker::new().expect("must be on main thread");
+    let mouse = NSEvent::mouseLocation();
+    let screens = NSScreen::screens(mtm);
+
+    screens
+        .iter()
+        .find(|s| {
+            let f = s.frame();
+            mouse.x >= f.origin.x
+                && mouse.x < f.origin.x + f.size.width
+                && mouse.y >= f.origin.y
+                && mouse.y < f.origin.y + f.size.height
+        })
+        .map(|s| s.retain())
+        .or_else(|| NSScreen::mainScreen(mtm))
+        .expect("no screens found")
+}
+
 /// This carries out the window configuration for the macos window (only things that are macos specific)
-pub(super) fn macos_window_config(handle: &WindowHandle) {
+pub(super) fn macos_window_config(handle: &WindowHandle, position: Position) {
     use iced::wgpu::rwh::RawWindowHandle;
     use objc2::rc::Retained;
     use objc2_app_kit::NSView;

@@ -2,7 +2,7 @@
 use iced::wgpu::rwh::WindowHandle;
 
 pub use self::cross::default_app_paths;
-use crate::app::apps::App;
+use crate::{app::apps::App, config::Position};
 
 pub mod cross;
 #[cfg(target_os = "macos")]
@@ -13,9 +13,9 @@ pub fn set_activation_policy_accessory() {
     self::macos::set_activation_policy_accessory();
 }
 
-pub fn window_config(handle: &WindowHandle) {
+pub fn window_config(handle: &WindowHandle, position: Position) {
     #[cfg(target_os = "macos")]
-    self::macos::macos_window_config(handle);
+    self::macos::macos_window_config(handle, position);
 }
 
 pub fn focus_this_app() {

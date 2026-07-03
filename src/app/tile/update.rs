@@ -12,6 +12,8 @@ use iced::widget::operation::AbsoluteOffset;
 use iced::window;
 use iced::window::Id;
 use log::info;
+use objc2::MainThreadMarker;
+use objc2_app_kit::NSApplication;
 use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
 use rayon::slice::ParallelSliceMut;
@@ -39,11 +41,13 @@ use crate::calculator::Expr;
 use crate::commands::Function;
 use crate::config::Config;
 use crate::config::MainPage;
+use crate::config::Position;
 use crate::config::ThemeMode;
 use crate::debounce::DebouncePolicy;
 use crate::platform::macos::events::Event;
 use crate::platform::macos::launching::Shortcut;
 use crate::platform::macos::launching::global_handler;
+use crate::platform::macos::screen_with_mouse;
 use crate::platform::macos::{start_at_login, stop_at_login};
 use crate::quit::get_open_apps;
 use crate::unit_conversion;
@@ -113,6 +117,19 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
             focus_this_app();
             tile.focused = true;
             tile.visible = true;
+
+            let app = NSApplication::sharedApplication(MainThreadMarker::new().unwrap());
+
+            if let Some(window) = app.keyWindow()
+                && tile.config.window_location != Position::Default
+            {
+                let size = window.frame().size;
+                window.setFrameOrigin(tile.config.window_location.point(
+                    size.width,
+                    size.height,
+                    screen_with_mouse(),
+                ));
+            };
 
             if tile.page == Page::Main && tile.query_lc.is_empty() {
                 window::latest()
@@ -947,6 +964,9 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
                 }
                 SetConfigFields::SetBufferFields(SetConfigBufferFields::ClearOnHide(clear)) => {
                     final_config.buffer_rules.clear_on_hide = clear;
+                }
+                SetConfigFields::SetPosition(pos) => {
+                    final_config.window_location = pos;
                 }
                 SetConfigFields::SetBufferFields(SetConfigBufferFields::ClearOnEnter(clear)) => {
                     final_config.buffer_rules.clear_on_enter = clear

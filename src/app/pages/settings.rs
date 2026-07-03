@@ -10,12 +10,14 @@ use iced::widget::Slider;
 use iced::widget::Space;
 use iced::widget::TextInput;
 use iced::widget::button;
+use iced::widget::pick_list;
 use iced::widget::radio;
 use iced::widget::scrollable::Direction;
 use iced::widget::scrollable::Scrollbar;
 use iced::widget::text_input;
 use iced::widget::toggler;
 
+use crate::config::Position;
 use crate::styles::settings_contents_container_style;
 use crate::styles::settings_tabs_container_style;
 use crate::styles::settings_toggle_style;
@@ -388,6 +390,11 @@ fn general_tab(config: Box<Config>, theme: crate::config::Theme) -> Column<'stat
         .into(),
     ]));
 
+    let position_dropdown = pick_list(Position::variants(), Some(config.window_location), |pos| {
+        Message::SetConfig(SetConfigFields::SetPosition(pos))
+    })
+    .into();
+
     Column::from_iter([
         hotkey,
         cb_hotkey,
@@ -395,6 +402,7 @@ fn general_tab(config: Box<Config>, theme: crate::config::Theme) -> Column<'stat
         search,
         debounce,
         start_at_login,
+        position_dropdown,
         auto_update,
         haptic,
         tray_icon,
