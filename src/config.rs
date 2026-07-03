@@ -2,6 +2,9 @@
 use std::{collections::HashMap, path::Path, sync::Arc};
 
 use iced::{Font, font::Family, theme::Custom, widget::image::Handle};
+use objc2::rc::Retained;
+use objc2_app_kit::NSScreen;
+use objc2_core_foundation::CGPoint;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -12,6 +15,79 @@ use crate::{
     commands::Function,
     utils::handle_from_icns,
 };
+
+#[derive(Debug, Clone, Deserialize, Serialize, Default, Copy, PartialEq)]
+pub enum Position {
+    #[default]
+    Default,
+    TopCenter,
+    TopRight,
+    TopLeft,
+    MiddleCenter,
+    MiddleRight,
+    MiddleLeft,
+    BottomCenter,
+    BottomRight,
+    BottomLeft,
+}
+
+impl Position {
+    pub fn variants() -> Vec<Self> {
+        vec![
+            Position::Default,
+            Position::TopCenter,
+            Position::TopRight,
+            Position::TopLeft,
+            Position::MiddleCenter,
+            Position::MiddleRight,
+            Position::MiddleLeft,
+            Position::BottomCenter,
+            Position::BottomRight,
+            Position::BottomLeft,
+        ]
+    }
+
+    pub fn point(&self, width: f64, height: f64, screen: Retained<NSScreen>) -> CGPoint {
+        let frame = screen.frame();
+        let ox = frame.origin.x;
+        let oy = frame.origin.y;
+        let sw = frame.size.width;
+        let sh = frame.size.height;
+
+        match self {
+            Position::Default => CGPoint::new(ox, oy),
+            Position::TopLeft => CGPoint::new(ox, oy + sh - height),
+            Position::TopCenter => CGPoint::new(ox + (sw / 2.) - (width / 2.), oy + sh - height),
+            Position::TopRight => CGPoint::new(ox + sw - width, oy + sh - height),
+            Position::MiddleLeft => CGPoint::new(ox, oy + (sh / 2.) - (height / 2.)),
+            Position::MiddleCenter => CGPoint::new(
+                ox + (sw / 2.) - (width / 2.),
+                oy + (sh / 2.) - (height / 2.),
+            ),
+            Position::MiddleRight => CGPoint::new(ox + sw - width, oy + (sh / 2.) - (height / 2.)),
+            Position::BottomLeft => CGPoint::new(ox, oy),
+            Position::BottomCenter => CGPoint::new(ox + (sw / 2.) - (width / 2.), oy),
+            Position::BottomRight => CGPoint::new(ox + sw - width, oy),
+        }
+    }
+}
+
+impl std::fmt::Display for Position {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Position::Default => write!(f, "Default"),
+            Position::TopCenter => write!(f, "Top Center"),
+            Position::TopRight => write!(f, "Top Right"),
+            Position::TopLeft => write!(f, "Top Left"),
+            Position::MiddleCenter => write!(f, "Middle Center"),
+            Position::MiddleRight => write!(f, "Middle Right"),
+            Position::MiddleLeft => write!(f, "Middle Left"),
+            Position::BottomCenter => write!(f, "Bottom Center"),
+            Position::BottomRight => write!(f, "Bottom Right"),
+            Position::BottomLeft => write!(f, "Bottom Left"),
+        }
+    }
+}
 
 /// The main config struct (effectively the config file's "schema")
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
@@ -25,6 +101,7 @@ pub struct Config {
     pub main_page: MainPage,
     pub start_at_login: bool,
     pub theme: Theme,
+    pub window_location: Position,
     pub placeholder: String,
     pub search_url: String,
     pub haptic_feedback: bool,
@@ -58,6 +135,7 @@ impl Default for Config {
             haptic_feedback: false,
             auto_update: true,
             show_trayicon: true,
+            window_location: Position::Default,
             main_page: MainPage::default(),
             search_dirs: vec!["~".to_string()],
             log_path: "/tmp/rustcast.log".to_string(),

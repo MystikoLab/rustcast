@@ -41,8 +41,13 @@ pub fn new(hotkeys: Hotkeys, config: &Config) -> (Tile, Task<Message>) {
 
     let events = Event::get_events(config.event_duration);
 
-    let open = open.discard().chain(window::run(id, |handle| {
-        platform::window_config(&handle.window_handle().expect("Unable to get window handle"));
+    let pos = config.window_location;
+
+    let open = open.discard().chain(window::run(id, move |handle| {
+        platform::window_config(
+            &handle.window_handle().expect("Unable to get window handle"),
+            pos,
+        );
         transform_process_to_ui_element();
     }));
     info!("MacOS platform config applied");

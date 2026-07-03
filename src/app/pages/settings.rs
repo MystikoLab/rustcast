@@ -10,12 +10,16 @@ use iced::widget::Slider;
 use iced::widget::Space;
 use iced::widget::TextInput;
 use iced::widget::button;
+use iced::widget::pick_list;
 use iced::widget::radio;
 use iced::widget::scrollable::Direction;
 use iced::widget::scrollable::Scrollbar;
 use iced::widget::text_input;
 use iced::widget::toggler;
 
+use crate::config::Position;
+use crate::styles::picklist_menu_style;
+use crate::styles::picklist_style;
 use crate::styles::settings_contents_container_style;
 use crate::styles::settings_tabs_container_style;
 use crate::styles::settings_toggle_style;
@@ -411,6 +415,23 @@ fn general_tab(config: Box<Config>, theme: crate::config::Theme) -> Column<'stat
         .into(),
     ]));
 
+    let theme_clone = theme.clone();
+    let theme_clone_2 = theme.clone();
+    let position_dropdown = settings_row_without_reset(settings_item_row([
+        settings_hint_text(
+            theme.clone(),
+            "Window Position",
+            Some("The position of the window"),
+        ),
+        Space::new().width(Length::Fill).into(),
+        pick_list(Position::variants(), Some(config.window_location), |pos| {
+            Message::SetConfig(SetConfigFields::SetPosition(pos))
+        })
+        .style(move |_, status| picklist_style(&theme_clone, status))
+        .menu_style(move |_| picklist_menu_style(&theme_clone_2))
+        .into(),
+    ]));
+
     Column::from_iter([
         hotkey,
         cb_hotkey,
@@ -419,6 +440,7 @@ fn general_tab(config: Box<Config>, theme: crate::config::Theme) -> Column<'stat
         search,
         debounce,
         start_at_login,
+        position_dropdown,
         auto_update,
         haptic,
         tray_icon,
