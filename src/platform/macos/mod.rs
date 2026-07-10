@@ -154,12 +154,14 @@ pub fn send_hyperkey_event() {
         CGEvent, CGEventFlags, CGEventSource, CGEventSourceStateID, CGEventTapLocation,
     };
 
+    dbg!("Hyperkey event");
+
     let source = CGEventSource::new(CGEventSourceStateID::HIDSystemState);
     let source_ref = source.as_deref();
 
     // Use a keycode that won't interfere - 0xFF or a null keycode
     // Alternatively use a specific key like F18 (0x4F) if you want a real key
-    let keycode: u16 = 0; // kVK_ANSI_A as placeholder, or use your target key
+    let keycode: u16 = 256; // kVK_ANSI_A as placeholder, or use your target key
 
     let hyper_flags = CGEventFlags::MaskCommand
         | CGEventFlags::MaskAlternate   // OPT
