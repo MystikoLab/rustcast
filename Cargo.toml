@@ -5,7 +5,7 @@ edition = "2024"
 license = "MIT"
 description = "RustCast - Productivity app for macOS"
 homepage = "https://rustcast.app"
-repository = "https://github.com/RustCastLabs/rustcast"
+repository = "https://github.com/MystikoLab/rustcast"
 
 [dependencies]
 arboard = "3.6.1"

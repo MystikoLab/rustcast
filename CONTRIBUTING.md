@@ -9,7 +9,7 @@ There are 2 areas you can work on:
 1. Help people in solving their github issues
 
 For bug fixes, and helping people to solve their github issues: see
-[https://github.com/RustCastLabs/rustcast/issues] For features, see
+[https://github.com/MystikoLab/rustcast/issues] For features, see
 [The Planned Features in the README](README.md) or
 [The existing feature list](FEATURES.md)
 

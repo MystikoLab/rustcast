@@ -12,7 +12,7 @@ pub struct ReleaseInfo {
 pub fn get_latest_release() -> Option<ReleaseInfo> {
     let req = minreq::Request::new(
         minreq::Method::Get,
-        "https://api.github.com/repos/RustCastLabs/rustcast/releases/latest",
+        "https://api.github.com/repos/MystikoLab/rustcast/releases/latest",
     )
     .with_header("User-Agent", "rustcast-update-checker")
     .with_header("Accept", "application/vnd.github+json")
