@@ -120,6 +120,9 @@ impl Function {
                 ClipBoardContentType::Image(img) => {
                     Clipboard::new().unwrap().set_image(img.to_owned_img()).ok();
                 }
+                ClipBoardContentType::Url(url) => {
+                    Clipboard::new().unwrap().set_text(url.to_string()).ok();
+                }
             },
 
             Function::Quit => std::process::exit(0),

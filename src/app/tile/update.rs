@@ -339,13 +339,11 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
         Message::ResizeWindow(id, height) => {
             info!("Resizing rustcast window");
             tile.height = height;
-            window::resize(
-                id,
-                iced::Size {
-                    width: WINDOW_WIDTH,
-                    height,
-                },
-            )
+            let width = match tile.page {
+                Page::ClipboardHistory => WINDOW_WIDTH + 50.,
+                _ => WINDOW_WIDTH,
+            };
+            window::resize(id, iced::Size { width, height })
         }
         Message::LoadRanking => {
             for (name, rank) in &tile.ranking {
@@ -489,7 +487,7 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
                         let id = x.unwrap();
                         Message::ResizeWindow(
                             id,
-                            ((7 * 30) + 35 + DEFAULT_WINDOW_HEIGHT as usize) as f32,
+                            ((7 * 55) + 35 + DEFAULT_WINDOW_HEIGHT as usize) as f32,
                         )
                     })
                 }
@@ -1144,16 +1142,16 @@ fn resize_for_results_count(id: Id, count: usize) -> Task<Message> {
 }
 
 fn open_result(tile: &mut Tile, id: usize) -> Task<Message> {
-    let results = if tile.page == Page::ClipboardHistory {
-        tile.clipboard_content
-            .iter()
-            .map(|x| x.to_app().to_owned())
-            .collect()
-    } else {
-        tile.results.clone()
-    };
+    if tile.page == Page::ClipboardHistory {
+        let Some(content) = tile.clipboard_content.get(id) else {
+            return Task::none();
+        };
+        return Task::done(message_for_open_command(&AppCommand::Function(
+            Function::CopyToClipboard(content.clone()),
+        )));
+    }
 
-    let Some(app) = results.get(id).cloned() else {
+    let Some(app) = tile.results.get(id).cloned() else {
         return Task::none();
     };
 

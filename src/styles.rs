@@ -40,11 +40,16 @@ icon!(emoji_icon = 57700);
 icon!(settings_icon = 58123);
 icon!(refresh_icon = 57669);
 icon!(quit_icon = 57476);
-icon!(hide_icon = 58926);
-icon!(unlock = 57612);
-icon!(palette = 57821);
-icon!(bolt = 58764);
-icon!(info = 57593);
+icon!(image_icon = 57590);
+icon!(url_icon = 57603);
+icon!(text_icon = 57752);
+icon!(trash_icon = 57742);
+icon!(open_icon = 58788);
+// icon!(hide_icon = 58926);
+// icon!(unlock = 57612);
+// icon!(palette = 57821);
+// icon!(bolt = 58764);
+// icon!(info = 57593);
 
 /// Helper: apply alpha
 pub fn with_alpha(mut c: Color, a: f32) -> Color {
@@ -100,6 +105,20 @@ pub fn picklist_menu_style(theme: &ConfigTheme) -> menu::Style {
     }
 }
 
+pub fn open_button_style(theme: &iced::Theme, _: button::Status) -> button::Style {
+    let palette = theme.palette();
+    button::Style {
+        background: Some(Background::Color(palette.background)),
+        text_color: palette.text,
+        border: Border {
+            color: palette.text,
+            width: 0.3,
+            radius: Radius::new(5),
+        },
+        ..Default::default()
+    }
+}
+
 /// Container styling for all the elements in the rustcast window
 pub fn contents_style(theme: &ConfigTheme) -> container::Style {
     container::Style {
@@ -122,7 +141,7 @@ pub fn delete_button_style(theme: &ConfigTheme) -> button::Style {
         border: Border {
             color: with_alpha(red_clr, 0.3),
             width: 0.5,
-            radius: Radius::new(15),
+            radius: Radius::new(5),
         },
         ..Default::default()
     }

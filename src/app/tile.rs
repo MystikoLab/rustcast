@@ -31,6 +31,7 @@ use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use rayon::slice::ParallelSliceMut;
 use tokio::io::{AsyncBufReadExt, AsyncRead};
 use tray_icon::TrayIcon;
+use url::Url;
 
 use std::collections::HashMap;
 use std::fmt::Debug;
@@ -386,6 +387,11 @@ fn handle_clipboard_history() -> impl futures::Stream<Item = Message> {
         loop {
             let byte_rep = if let Ok(a) = clipboard.get_image() {
                 Some(ClipBoardContentType::Image(a))
+            } else if let Ok(a) = clipboard.get_text()
+                && !a.trim().is_empty()
+                && Url::parse(&a).is_ok()
+            {
+                Some(ClipBoardContentType::Url(a))
             } else if let Ok(a) = clipboard.get_text()
                 && !a.trim().is_empty()
             {

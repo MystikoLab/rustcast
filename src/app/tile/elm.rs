@@ -24,7 +24,8 @@ use crate::config::Theme;
 use crate::debounce::Debouncer;
 use crate::platform::macos::events::Event;
 use crate::styles::{
-    contents_style, glass_border, glass_surface, results_scrollbar_style, rustcast_text_input_style,
+    contents_style, glass_border, glass_surface, results_scrollbar_style,
+    rustcast_text_input_style, with_alpha,
 };
 use crate::{app::WINDOW_WIDTH, platform};
 use crate::{app::pages::clipboard::clipboard_view, platform::get_installed_apps};
@@ -269,7 +270,7 @@ fn footer(theme: Theme, current_mode: String, text: String) -> Element<'static, 
     )
     .align_y(Alignment::Center)
     .center(Length::Fill)
-    .width(WINDOW_WIDTH)
+    .width(Length::Fill)
     .padding(5)
     .height(30)
     .style(move |_| container::Style {

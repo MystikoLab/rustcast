@@ -1,12 +1,18 @@
 //! This has all the logic regarding the cliboard history
 use arboard::ImageData;
+use iced::{
+    Alignment, Element, Length,
+    widget::{Button, Text, container, row},
+};
+use objc2_foundation::NSProgressFileOperationKindReceiving;
 
 use crate::{
     app::{
-        ToApp,
+        Message, ToApp,
         apps::{App, AppIcon},
     },
     commands::Function,
+    styles::{image_icon, result_button_style, result_row_container_style, text_icon, url_icon},
 };
 
 /// The kinds of clipboard content that rustcast can handle and their contents
@@ -14,33 +20,16 @@ use crate::{
 pub enum ClipBoardContentType {
     Text(String),
     Image(ImageData<'static>),
+    Url(String),
 }
 
-impl ToApp for ClipBoardContentType {
-    /// Returns the iced element for rendering the clipboard item, and the entire content since the
-    /// display name is only the first line
-    fn to_app(&self) -> App {
-        let mut display_name = match self {
-            ClipBoardContentType::Image(_) => "Image".to_string(),
-            ClipBoardContentType::Text(a) => a.get(0..25).unwrap_or(a).to_string(),
-        };
-
-        let self_clone = self.clone();
-        let search_name = display_name.clone();
-
-        // only get the first line from the contents
-        display_name = display_name.lines().next().unwrap_or("").to_string();
-
-        App {
-            ranking: 0,
-            open_command: crate::app::apps::AppCommand::Function(Function::CopyToClipboard(
-                self_clone.to_owned(),
-            )),
-            desc: "Clipboard Item".to_string(),
-            icons: AppIcon::None,
-            display_name,
-            search_name,
-        }
+fn shorten(s: &str) -> String {
+    let s = s.trim();
+    if s.len() <= 20 {
+        String::from(s)
+    } else {
+        let ind = s.floor_char_boundary(20);
+        [&s[..ind], "..."].concat()
     }
 }
 
@@ -55,8 +44,57 @@ impl PartialEq for ClipBoardContentType {
             && let Self::Image(other_image_data) = other
         {
             return image_data.bytes == other_image_data.bytes;
+        } else if let Self::Url(a) = self
+            && let Self::Url(b) = other
+        {
+            return a == b;
         }
         false
+    }
+}
+
+impl ClipBoardContentType {
+    pub fn render_row(
+        &self,
+        selected: bool,
+        theme: &crate::config::Theme,
+    ) -> Element<'static, Message> {
+        let title_icon_fn = match self {
+            ClipBoardContentType::Image(_) => image_icon,
+            ClipBoardContentType::Text(_) => text_icon,
+            ClipBoardContentType::Url(_) => url_icon,
+        };
+
+        let first_few_chars = match self {
+            ClipBoardContentType::Text(text) | ClipBoardContentType::Url(text) => shorten(text),
+            ClipBoardContentType::Image(_) => "Image".to_string(),
+        }
+        .to_string();
+
+        let theme_1 = theme.clone();
+        let theme_2 = theme.clone();
+
+        container(
+            Button::new(
+                row![
+                    title_icon_fn().size(22),
+                    Text::new(first_few_chars)
+                        .center()
+                        .height(Length::Fill)
+                        .width(Length::Fill)
+                ]
+                .padding(5)
+                .height(Length::Fill)
+                .height(30)
+                .align_y(Alignment::Center),
+            )
+            .style(move |_, _| result_button_style(&theme_1))
+            .on_press(Message::RunFunction(Function::CopyToClipboard(
+                self.clone(),
+            ))),
+        )
+        .style(move |_| result_row_container_style(&theme_2, selected))
+        .into()
     }
 }
 
@@ -81,10 +119,10 @@ mod tests {
         let item =
             ClipBoardContentType::Text("abcdefghijklmnopqrstuvwxyz\nsecond line".to_string());
 
-        let app = item.to_app();
+        // let app = item.to_app();
 
-        assert_eq!(app.display_name, "abcdefghijklmnopqrstuvwxy");
-        assert_eq!(app.search_name, "abcdefghijklmnopqrstuvwxy");
-        assert_eq!(app.desc, "Clipboard Item");
+        // assert_eq!(app.display_name, "abcdefghijklmnopqrstuvwxy");
+        // assert_eq!(app.search_name, "abcdefghijklmnopqrstuvwxy");
+        // assert_eq!(app.desc, "Clipboard Item");
     }
 }
