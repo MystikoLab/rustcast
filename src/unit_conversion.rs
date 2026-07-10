@@ -3,7 +3,7 @@
 use crate::{
     app::{
         ToApp,
-        apps::{App, AppCommand},
+        apps::{App, AppCommand, AppIcon},
     },
     clipboard::ClipBoardContentType,
     commands::Function,
@@ -259,7 +259,7 @@ impl ToApp for ConversionResult {
                 ClipBoardContentType::Text(target.clone()),
             )),
             desc: source,
-            icons: None,
+            icons: AppIcon::None,
             display_name: target,
             search_name: String::new(),
         }

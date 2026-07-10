@@ -6,7 +6,7 @@ use crate::app::apps::App;
 use crate::app::{ArrowKey, Message, Move, Page};
 use crate::autoupdate::new_version_available;
 use crate::clipboard::ClipBoardContentType;
-use crate::config::{Config, Shelly};
+use crate::config::{Config, Shelly, Theme};
 use crate::debounce::Debouncer;
 use crate::platform::default_app_paths;
 use crate::platform::macos::events::Event;
@@ -18,7 +18,7 @@ use iced::futures::SinkExt;
 use iced::futures::channel::mpsc::{Sender, channel};
 use iced::keyboard::Modifiers;
 use iced::{
-    Subscription, Theme, futures,
+    Subscription, futures,
     keyboard::{self, key::Named},
     stream,
 };
@@ -232,8 +232,8 @@ impl Hotkeys {
 
 impl Tile {
     /// This returns the theme of the window
-    pub fn theme(&self, _: window::Id) -> Option<Theme> {
-        Some(self.theme.clone())
+    pub fn theme(&self, _: window::Id) -> Option<iced::Theme> {
+        Some(self.config.theme.clone().into())
     }
 
     /// This handles the subscriptions of the window

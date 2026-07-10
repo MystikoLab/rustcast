@@ -7,7 +7,7 @@ use log::{error, info};
 use rayon::iter::{IntoParallelIterator, IntoParallelRefIterator, ParallelIterator as _};
 
 use crate::{
-    app::apps::{App, AppCommand},
+    app::apps::{App, AppCommand, AppIcon},
     commands::Function,
     utils::handle_from_icns,
 };
@@ -80,6 +80,7 @@ fn discover_apps(dir: impl AsRef<Path>, store_icons: bool) -> Vec<App> {
             } else {
                 None
             };
+            let icons = AppIcon::from_handle(icons);
 
             let name = file_name.strip_suffix(".app").unwrap().to_string();
             Some(App {

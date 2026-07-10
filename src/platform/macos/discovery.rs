@@ -32,7 +32,7 @@ use objc2_foundation::{
 use rayon::iter::{IntoParallelIterator, ParallelIterator as _};
 
 use crate::{
-    app::apps::{App, AppCommand},
+    app::apps::{App, AppCommand, AppIcon},
     commands::Function,
 };
 
@@ -283,6 +283,7 @@ fn query_app(url: impl AsRef<NSURL>, store_icons: bool) -> Option<App> {
     } else {
         None
     };
+    let icons = AppIcon::from_handle(icons);
 
     Some(App {
         ranking: 0,

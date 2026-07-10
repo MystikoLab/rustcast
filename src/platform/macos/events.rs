@@ -6,7 +6,7 @@ use objc2_foundation::{NSDate, NSDateFormatter, NSDateFormatterStyle, NSError};
 use crate::{
     app::{
         ToApp,
-        apps::{App, AppCommand, ICNS_ICON},
+        apps::{App, AppCommand, AppIcon, ICNS_ICON},
     },
     commands::Function,
     utils::icns_data_to_handle,
@@ -27,7 +27,12 @@ impl ToApp for Event {
         } else {
             AppCommand::Display
         };
-        App::new(self.event_name.clone(), icons, self.time.clone(), appcmd)
+        App::new(
+            self.event_name.clone(),
+            AppIcon::from_handle(icons),
+            self.time.clone(),
+            appcmd,
+        )
     }
 }
 

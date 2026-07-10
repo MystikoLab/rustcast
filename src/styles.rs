@@ -1,11 +1,14 @@
 //! This handles most of the styling for the rustcast elements
 use crate::config::Theme as ConfigTheme;
 use iced::Shadow;
+use iced::Theme;
 use iced::border::Radius;
 use iced::overlay::menu::{self};
 use iced::widget::toggler::Status;
 use iced::widget::{button, container, pick_list, radio, scrollable, slider, toggler};
 use iced::{Background, Border, Color, widget::text_input};
+
+use std::borrow::Cow;
 
 /// Helper: mix base color with white (simple “tint”)
 pub fn tint(mut c: Color, amount: f32) -> Color {
@@ -14,6 +17,35 @@ pub fn tint(mut c: Color, amount: f32) -> Color {
     c.b = c.b + (1.0 - c.b) * amount;
     c
 }
+
+pub fn load_font() -> Cow<'static, [u8]> {
+    include_bytes!("../docs/lucide.ttf").as_slice().into()
+}
+
+pub static LUCIDE_FONT: iced::Font = iced::Font::with_name("lucide");
+
+macro_rules! icon {
+    ($name:ident = $icon:literal) => {
+        pub fn $name<'a>() -> ::iced::widget::Text<'a> {
+            ::iced::widget::text(const { ::core::char::from_u32($icon).unwrap() })
+                .font(LUCIDE_FONT)
+                .line_height(1.0)
+        }
+    };
+}
+
+icon!(info_icon = 57921);
+icon!(filesearch_icon = 57547);
+icon!(clipboard_icon = 58119);
+icon!(emoji_icon = 57700);
+icon!(settings_icon = 58123);
+icon!(refresh_icon = 57669);
+icon!(quit_icon = 57476);
+icon!(hide_icon = 58926);
+icon!(unlock = 57612);
+icon!(palette = 57821);
+icon!(bolt = 58764);
+icon!(info = 57593);
 
 /// Helper: apply alpha
 pub fn with_alpha(mut c: Color, a: f32) -> Color {
@@ -76,8 +108,8 @@ pub fn contents_style(theme: &ConfigTheme) -> container::Style {
         text_color: None,
         border: iced::Border {
             color: theme.bg_color(),
-            width: 0.4,
-            radius: Radius::new(14.0),
+            width: 0.,
+            radius: Radius::new(15.0),
         },
         ..Default::default()
     }

@@ -7,7 +7,7 @@ use objc2_app_kit::NSWorkspace;
 use objc2_foundation::NSURL;
 
 use crate::{
-    app::apps::{App, AppCommand},
+    app::apps::{App, AppCommand, AppIcon},
     calculator::Expr,
     clipboard::ClipBoardContentType,
     config::Config,
@@ -156,7 +156,7 @@ pub fn path_to_app(absolute_path: &str, home_dir: &str) -> Option<App> {
         ranking: 0,
         open_command: AppCommand::Function(Function::OpenApp(path.to_string())),
         desc: display_path,
-        icons: None,
+        icons: AppIcon::None,
         display_name: filename.to_string(),
         search_name: filename.to_lowercase(),
     })

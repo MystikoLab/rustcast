@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     app::{
         ToApp,
-        apps::{App, AppCommand},
+        apps::{App, AppCommand, AppIcon},
     },
     commands::Function,
     utils::handle_from_icns,
@@ -365,7 +365,7 @@ impl ToApp for Shelly {
             ranking: 0,
             open_command: AppCommand::Function(Function::RunShellCommand(self_clone.command)),
             desc: "Shell Command".to_string(),
-            icons: icon,
+            icons: AppIcon::from_handle(icon),
             display_name: self_clone.alias,
             search_name: self_clone.alias_lc,
         }

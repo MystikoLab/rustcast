@@ -5,11 +5,13 @@
 use std::io::Cursor;
 
 use iced::{
-    Alignment,
+    Alignment, Background, Color, Element,
     Length::{self, Fill},
+    border::Radius,
     widget::{
         Button, Row, Text, container,
         image::{Handle, Viewer},
+        space,
         text::Wrapping,
     },
 };
@@ -18,7 +20,10 @@ use crate::{
     app::{Message, Page, RUSTCAST_DESC_NAME},
     clipboard::ClipBoardContentType,
     commands::Function,
-    styles::{favourite_button_style, result_button_style, result_row_container_style},
+    styles::{
+        clipboard_icon, emoji_icon, favourite_button_style, filesearch_icon, info_icon, quit_icon,
+        refresh_icon, result_button_style, result_row_container_style, settings_icon,
+    },
     utils::icns_data_to_handle,
 };
 
@@ -44,9 +49,65 @@ pub struct App {
     pub ranking: i32,
     pub open_command: AppCommand,
     pub desc: String,
-    pub icons: Option<iced::widget::image::Handle>,
+    pub icons: AppIcon,
     pub display_name: String,
     pub search_name: String,
+}
+
+#[derive(Debug, Clone)]
+pub enum AppIcon {
+    IconFromFont(fn() -> Text<'static>),
+    ImageHandle(iced::widget::image::Handle),
+    None,
+}
+
+impl PartialEq for AppIcon {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::IconFromFont(_), Self::IconFromFont(_)) => true,
+            (Self::ImageHandle(l0), Self::ImageHandle(r0)) => l0 == r0,
+            (AppIcon::None, AppIcon::None) => true,
+            _ => false,
+        }
+    }
+}
+
+impl AppIcon {
+    pub fn render(&self) -> Element<'static, Message> {
+        match self {
+            Self::IconFromFont(icon_fn) => container(
+                icon_fn()
+                    .center()
+                    .size(20)
+                    .height(Length::Fill)
+                    .width(Length::Fill),
+            )
+            .style(|theme| container::Style {
+                background: None,
+                border: iced::Border {
+                    color: theme.palette().text,
+                    width: 0.,
+                    radius: Radius::new(10),
+                },
+                ..Default::default()
+            })
+            .height(30)
+            .width(30)
+            .into(),
+            Self::ImageHandle(handle) => Viewer::new(handle)
+                .height(30)
+                .width(30)
+                .scale_step(0.)
+                .into(),
+            Self::None => space().into(),
+        }
+    }
+
+    pub fn from_handle(handle: Option<Handle>) -> AppIcon {
+        handle
+            .map(|x| AppIcon::ImageHandle(x))
+            .unwrap_or(AppIcon::None)
+    }
 }
 
 impl PartialEq for App {
@@ -59,7 +120,7 @@ impl PartialEq for App {
 }
 
 impl App {
-    pub fn new(name: String, icon: Option<Handle>, desc: String, command: AppCommand) -> Self {
+    pub fn new(name: String, icon: AppIcon, desc: String, command: AppCommand) -> Self {
         Self {
             ranking: 0,
             open_command: command,
@@ -75,7 +136,7 @@ impl App {
             .filter(|x| x.unicode_version() < emojis::UnicodeVersion::new(17, 13))
             .map(|x| App {
                 ranking: 0,
-                icons: None,
+                icons: AppIcon::None,
                 display_name: x.to_string(),
                 search_name: x.name().to_string(),
                 open_command: AppCommand::Function(Function::CopyToClipboard(
@@ -88,8 +149,6 @@ impl App {
     /// This returns the basic apps that rustcast has, such as quiting rustcast and opening preferences
     pub fn basic_apps() -> Vec<App> {
         let app_version = option_env!("APP_VERSION").unwrap_or("Unknown Version");
-
-        let icons = icns_data_to_handle(ICNS_ICON.to_vec());
 
         let ferris_handle =
             image::ImageReader::new(Cursor::new(include_bytes!("../../docs/ferris_rs.png")))
@@ -105,7 +164,7 @@ impl App {
                 open_command: AppCommand::Function(Function::OpenWebsite(
                     "https://ferris.rs".to_string(),
                 )),
-                icons: ferris_handle,
+                icons: AppIcon::from_handle(ferris_handle),
                 desc: "Easter Egg".to_string(),
                 display_name: "Ferris Plushies".to_string(),
                 search_name: "ferris.rs".to_string(),
@@ -114,7 +173,7 @@ impl App {
                 ranking: 0,
                 open_command: AppCommand::Function(Function::Quit),
                 desc: RUSTCAST_DESC_NAME.to_string(),
-                icons: icons.clone(),
+                icons: AppIcon::IconFromFont(quit_icon),
                 display_name: "Quit RustCast".to_string(),
                 search_name: "quit".to_string(),
             },
@@ -122,7 +181,7 @@ impl App {
                 ranking: 0,
                 open_command: AppCommand::Function(Function::QuitAllApps),
                 desc: RUSTCAST_DESC_NAME.to_string(),
-                icons: icons.clone(),
+                icons: AppIcon::IconFromFont(quit_icon),
                 display_name: "Quit All Apps".to_string(),
                 search_name: "quit all apps".to_string(),
             },
@@ -130,7 +189,7 @@ impl App {
                 ranking: 0,
                 open_command: AppCommand::Message(Message::OpenSettingsWindow),
                 desc: RUSTCAST_DESC_NAME.to_string(),
-                icons: icons.clone(),
+                icons: AppIcon::IconFromFont(settings_icon),
                 display_name: "Open RustCast Preferences".to_string(),
                 search_name: "settings".to_string(),
             },
@@ -138,7 +197,7 @@ impl App {
                 ranking: 0,
                 open_command: AppCommand::Message(Message::SwitchToPage(Page::EmojiSearch)),
                 desc: RUSTCAST_DESC_NAME.to_string(),
-                icons: icons.clone(),
+                icons: AppIcon::IconFromFont(emoji_icon),
                 display_name: "Search for an Emoji".to_string(),
                 search_name: "emoji".to_string(),
             },
@@ -146,7 +205,7 @@ impl App {
                 ranking: 0,
                 open_command: AppCommand::Message(Message::SwitchToPage(Page::ClipboardHistory)),
                 desc: RUSTCAST_DESC_NAME.to_string(),
-                icons: icons.clone(),
+                icons: AppIcon::IconFromFont(clipboard_icon),
                 display_name: "Clipboard History".to_string(),
                 search_name: "clipboard".to_string(),
             },
@@ -154,7 +213,7 @@ impl App {
                 ranking: 0,
                 open_command: AppCommand::Message(Message::SwitchToPage(Page::FileSearch)),
                 desc: RUSTCAST_DESC_NAME.to_string(),
-                icons: icons.clone(),
+                icons: AppIcon::IconFromFont(filesearch_icon),
                 display_name: "Search for a file".to_string(),
                 search_name: "file search".to_string(),
             },
@@ -162,7 +221,7 @@ impl App {
                 ranking: 0,
                 open_command: AppCommand::Message(Message::ReloadConfig),
                 desc: RUSTCAST_DESC_NAME.to_string(),
-                icons: icons.clone(),
+                icons: AppIcon::IconFromFont(refresh_icon),
                 display_name: "Reload RustCast".to_string(),
                 search_name: "refresh".to_string(),
             },
@@ -170,7 +229,7 @@ impl App {
                 ranking: 0,
                 open_command: AppCommand::Display,
                 desc: RUSTCAST_DESC_NAME.to_string(),
-                icons: icons.clone(),
+                icons: AppIcon::IconFromFont(info_icon),
                 display_name: format!("Current RustCast Version: {app_version}"),
                 search_name: "version".to_string(),
             },
@@ -204,7 +263,7 @@ impl App {
                 ranking: 0,
                 open_command: AppCommand::Function(Function::TileWindow(pos.clone())),
                 desc: "Window Tiling".to_string(),
-                icons: icons.clone(),
+                icons: AppIcon::from_handle(icons.clone()),
                 display_name: name.to_string(),
                 search_name: name.to_lowercase(),
             })
@@ -222,38 +281,32 @@ impl App {
         let focused = focussed_id == id_num;
 
         // Title + subtitle (Raycast style)
-        let text_block = iced::widget::Column::new()
-            .spacing(2)
-            .push(
-                Text::new(self.display_name)
-                    .font(theme.font())
-                    .size(16)
-                    .wrapping(Wrapping::None)
-                    .color(theme.text_color(1.0)),
-            )
-            .push(
-                Text::new(self.desc)
-                    .font(theme.font())
-                    .size(13)
-                    .color(theme.text_color(0.55)),
-            );
+        let text_block = Text::new(self.display_name)
+            .font(theme.font())
+            .size(16)
+            .wrapping(Wrapping::None)
+            .color(theme.text_color(1.0));
+        let subtitle_block = container(
+            Text::new(self.desc)
+                .font(theme.font())
+                .size(13)
+                .width(Length::Fill)
+                .align_x(Alignment::End)
+                .color(theme.text_color(0.55)),
+        );
 
         let mut row = Row::new()
             .align_y(Alignment::Center)
             .width(Fill)
             .spacing(10)
-            .height(50);
+            .height(40);
 
-        if theme.show_icons
-            && let Some(icon) = &self.icons
-        {
-            row = row.push(
-                container(Viewer::new(icon).height(40).width(40))
-                    .width(40)
-                    .height(40),
-            );
+        if theme.show_icons {
+            row = row.push(container(self.icons.render()).width(30).height(30));
         }
-        row = row.push(container(text_block).width(Fill));
+        row = row
+            .push(container(text_block).width(Fill))
+            .push(subtitle_block);
 
         let name = self.search_name.clone();
         let theme_clone = theme.clone();
@@ -261,7 +314,7 @@ impl App {
         row = row.push(
             Button::new(Text::new("♥️").width(Length::Fill).align_x(Alignment::End))
                 .on_press_with(move || Message::ToggleFavouriteApp(name.clone()))
-                .width(Length::Fill)
+                .width(20)
                 .style(move |_, status| favourite_button_style(&theme_clone, status, is_favourite)),
         );
 
@@ -278,7 +331,7 @@ impl App {
             .style(move |_, _| result_button_style(&theme_clone))
             .width(Fill)
             .padding(0)
-            .height(50);
+            .height(40);
 
         container(content)
             .id(format!("result-{}", id_num))

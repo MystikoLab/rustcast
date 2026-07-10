@@ -30,6 +30,7 @@ use crate::app::ToApps;
 use crate::app::WINDOW_WIDTH;
 use crate::app::apps::App;
 use crate::app::apps::AppCommand;
+use crate::app::apps::AppIcon;
 use crate::app::default_settings;
 use crate::app::menubar::menu_builder;
 use crate::app::menubar::menu_icon;
@@ -304,7 +305,7 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
                 };
 
                 let quantity = match tile.page {
-                    Page::Main | Page::FileSearch | Page::ClipboardHistory => 66.5,
+                    Page::Main | Page::FileSearch | Page::ClipboardHistory => 56.,
                     Page::EmojiSearch => 5.,
                 };
 
@@ -488,7 +489,7 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
                         let id = x.unwrap();
                         Message::ResizeWindow(
                             id,
-                            ((7 * 55) + 35 + DEFAULT_WINDOW_HEIGHT as usize) as f32,
+                            ((7 * 30) + 35 + DEFAULT_WINDOW_HEIGHT as usize) as f32,
                         )
                     })
                 }
@@ -496,6 +497,7 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
             };
 
             tile.page = page;
+            tile.focus_id = 0;
 
             let refresh_empty_main_query = if tile.page == Page::Main {
                 window::latest()
@@ -1220,7 +1222,7 @@ fn execute_query(tile: &mut Tile, id: Id) -> Task<Message> {
                 ranking: 0,
                 open_command: AppCommand::Function(Function::RandomVar(rand_num)),
                 desc: "Easter egg".to_string(),
-                icons: None,
+                icons: AppIcon::None,
                 display_name: rand_num.to_string(),
                 search_name: String::new(),
             }];
@@ -1233,7 +1235,7 @@ fn execute_query(tile: &mut Tile, id: Id) -> Task<Message> {
                     "https://zombo.com".to_string(),
                 )),
                 desc: "Easter Egg".to_string(),
-                icons: None,
+                icons: AppIcon::None,
                 display_name: "🫳 🌱".to_string(),
                 search_name: "".to_string(),
             }];
@@ -1244,7 +1246,7 @@ fn execute_query(tile: &mut Tile, id: Id) -> Task<Message> {
                 ranking: 0,
                 open_command: AppCommand::Display,
                 desc: "Easter Egg".to_string(),
-                icons: lemon_icon_handle(),
+                icons: AppIcon::from_handle(lemon_icon_handle()),
                 display_name: "Lemon".to_string(),
                 search_name: "".to_string(),
             }];
@@ -1255,7 +1257,7 @@ fn execute_query(tile: &mut Tile, id: Id) -> Task<Message> {
                 ranking: 0,
                 open_command: AppCommand::Function(Function::RandomVar(67)),
                 desc: "Easter egg".to_string(),
-                icons: None,
+                icons: AppIcon::None,
                 display_name: 67.to_string(),
                 search_name: String::new(),
             }];
@@ -1284,7 +1286,7 @@ fn execute_query(tile: &mut Tile, id: Id) -> Task<Message> {
                     ranking: 20,
                     open_command: AppCommand::Function(Function::RunShellCommand(command.clone())),
                     display_name: format!("Shell Command: {}", command),
-                    icons: None,
+                    icons: AppIcon::None,
                     search_name: "".to_string(),
                     desc: "Shell Command".to_string(),
                 }];
@@ -1349,7 +1351,7 @@ fn execute_query(tile: &mut Tile, id: Id) -> Task<Message> {
             ranking: 0,
             open_command: AppCommand::Function(Function::OpenWebsite(tile.query.clone())),
             desc: "Web Browsing".to_string(),
-            icons: None,
+            icons: AppIcon::None,
             display_name: "Open Website: ".to_string() + &tile.query,
             search_name: String::new(),
         });
@@ -1364,7 +1366,7 @@ fn execute_query(tile: &mut Tile, id: Id) -> Task<Message> {
             ranking: 0,
             open_command: AppCommand::Function(Function::Calculate(res.clone())),
             desc: RUSTCAST_DESC_NAME.to_string(),
-            icons: None,
+            icons: AppIcon::None,
             display_name: res.eval().map(|x| x.to_string()).unwrap_or("".to_string()),
             search_name: "".to_string(),
         });
@@ -1373,7 +1375,7 @@ fn execute_query(tile: &mut Tile, id: Id) -> Task<Message> {
         tile.results = vec![App {
             ranking: 0,
             open_command: AppCommand::Function(Function::GoogleSearch(tile.query.clone())),
-            icons: None,
+            icons: AppIcon::None,
             desc: "Web Search".to_string(),
             display_name: format!("Search for: {}", tile.query),
             search_name: String::new(),
@@ -1396,7 +1398,7 @@ mod tests {
             ranking,
             open_command: command,
             desc: "Application".to_string(),
-            icons: None,
+            icons: AppIcon::None,
             display_name: search_name.to_string(),
             search_name: search_name.to_string(),
         }

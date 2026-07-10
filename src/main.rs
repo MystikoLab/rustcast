@@ -19,6 +19,7 @@ use crate::{
     app::tile::{self, Hotkeys, Tile},
     config::Config,
     platform::macos::{get_autostart_status, launching::Shortcut},
+    styles::load_font,
 };
 
 use log::info;
@@ -96,6 +97,7 @@ fn main() -> iced::Result {
         tile::elm::view,
     )
     .subscription(Tile::subscription)
+    .font(load_font())
     .theme(Tile::theme)
     .run()
 }

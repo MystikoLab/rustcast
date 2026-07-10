@@ -2,7 +2,10 @@
 use arboard::ImageData;
 
 use crate::{
-    app::{ToApp, apps::App},
+    app::{
+        ToApp,
+        apps::{App, AppIcon},
+    },
     commands::Function,
 };
 
@@ -34,7 +37,7 @@ impl ToApp for ClipBoardContentType {
                 self_clone.to_owned(),
             )),
             desc: "Clipboard Item".to_string(),
-            icons: None,
+            icons: AppIcon::None,
             display_name,
             search_name,
         }

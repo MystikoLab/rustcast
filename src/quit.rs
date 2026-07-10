@@ -5,7 +5,7 @@ use objc2_app_kit::{NSApplicationActivationPolicy, NSWorkspace};
 use objc2_foundation::NSString;
 
 use crate::{
-    app::apps::{App, AppCommand},
+    app::apps::{App, AppCommand, AppIcon},
     commands::Function,
     platform::macos::discovery::icon_of_path_ns,
 };
@@ -39,6 +39,7 @@ pub fn get_open_apps(store_icons: bool) -> Vec<App> {
             } else {
                 None
             };
+            let icons = AppIcon::from_handle(icons);
 
             Some(App {
                 ranking: 0,

@@ -1,7 +1,7 @@
 //! Main logic for the app
 use std::collections::HashMap;
 
-use crate::app::apps::{App, AppCommand, ICNS_ICON};
+use crate::app::apps::{App, AppCommand, AppIcon, ICNS_ICON};
 use crate::commands::Function;
 use crate::config::{Config, MainPage, Position, Shelly, ThemeMode};
 use crate::debounce::DebouncePolicy;
@@ -17,10 +17,10 @@ pub mod tile;
 
 use iced::window::{self, Id, Settings};
 /// The default window width
-pub const WINDOW_WIDTH: f32 = 500.;
+pub const WINDOW_WIDTH: f32 = 550.;
 
 /// The default window height
-pub const DEFAULT_WINDOW_HEIGHT: f32 = 100.;
+pub const DEFAULT_WINDOW_HEIGHT: f32 = 150.;
 
 /// Maximum file search results returned by a single mdfind invocation.
 pub const FILE_SEARCH_MAX_RESULTS: u32 = 400;
@@ -281,7 +281,7 @@ impl ToApps for HashMap<String, String> {
                     )),
                     search_name: key.to_owned(),
                     desc: "Switch Modes".to_string(),
-                    icons: icons.clone(),
+                    icons: AppIcon::from_handle(icons.clone()),
                     display_name,
                 }
             })
@@ -292,7 +292,7 @@ impl ToApps for HashMap<String, String> {
                 ranking: 0,
                 open_command: AppCommand::Message(Message::SwitchMode("Default".to_string())),
                 desc: "Change mode".to_string(),
-                icons: icons.clone(),
+                icons: AppIcon::from_handle(icons.clone()),
                 display_name: "Default mode".to_string(),
                 search_name: "default".to_string(),
             });

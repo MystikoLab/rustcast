@@ -177,7 +177,7 @@ pub fn view(tile: &Tile, wid: window::Id) -> Element<'_, Message> {
             Page::ClipboardHistory => 385,
             // Height of each emoji is EMOJI_HEIGHT + 20 for padding
             Page::EmojiSearch => std::cmp::min(tile.results.len().div_ceil(6) * 90, 290),
-            _ => std::cmp::min(tile.results.len() * 60, 290),
+            _ => std::cmp::min(tile.results.len() * 56, 290),
         };
 
         let theme = tile.config.theme.clone();
@@ -216,7 +216,7 @@ pub fn view(tile: &Tile, wid: window::Id) -> Element<'_, Message> {
             text_color: None,
             background: None,
             border: iced::Border {
-                color: Color::TRANSPARENT,
+                color: Color::WHITE,
                 width: 0.,
                 radius: Radius::new(15),
             },
@@ -224,6 +224,7 @@ pub fn view(tile: &Tile, wid: window::Id) -> Element<'_, Message> {
         });
 
         container(contents)
+            .padding(10)
             .style(|_| contents_style(&tile.config.theme))
             .into()
     } else {
