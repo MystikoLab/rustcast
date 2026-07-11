@@ -29,6 +29,7 @@ use objc2::rc::Retained;
 use objc2_app_kit::NSRunningApplication;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use rayon::slice::ParallelSliceMut;
+use rusqlite::Connection;
 use tokio::io::{AsyncBufReadExt, AsyncRead};
 use tray_icon::TrayIcon;
 use url::Url;
@@ -177,7 +178,6 @@ fn build_mdfind_args(query: &str, dirs: &[String], home_dir: &str) -> Option<Vec
 /// - Page ([`Page`]) the current page of the window (main or clipboard history)
 /// - RustCast's height: to figure out which height to resize to
 /// - Settings Window: the ID of the window if it is open
-#[derive(Clone)]
 pub struct Tile {
     pub theme: iced::Theme,
     pub focus_id: u32,
@@ -206,6 +206,7 @@ pub struct Tile {
     debouncer: Debouncer,
     pub settings_window: Option<window::Id>,
     previous_input_source: Option<String>,
+    conn: Connection,
 }
 
 impl Tile {

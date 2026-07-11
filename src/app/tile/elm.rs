@@ -21,8 +21,8 @@ use crate::app::pages::settings::settings_page;
 use crate::app::tile::{AppIndex, Hotkeys};
 use crate::app::{DEFAULT_WINDOW_HEIGHT, SettingsTab, ToApp, ToApps};
 use crate::config::Theme;
+use crate::database::load_clipboard;
 use crate::debounce::Debouncer;
-use crate::platform;
 use crate::platform::macos::events::Event;
 use crate::styles::{
     contents_style, glass_border, glass_surface, results_scrollbar_style, rustcast_text_input_style,
@@ -33,6 +33,7 @@ use crate::{
     config::Config,
     platform::transform_process_to_ui_element,
 };
+use crate::{database, platform};
 
 /// Initialise the base window
 pub fn new(hotkeys: Hotkeys, config: &Config) -> (Tile, Task<Message>) {
@@ -78,6 +79,10 @@ pub fn new(hotkeys: Hotkeys, config: &Config) -> (Tile, Task<Message>) {
 
     crate::platform::macos::urlscheme::install();
 
+    let conn = database::initialise_database();
+
+    let clipboard_content = load_clipboard(&conn);
+
     (
         Tile {
             update_available: false,
@@ -96,7 +101,7 @@ pub fn new(hotkeys: Hotkeys, config: &Config) -> (Tile, Task<Message>) {
             config: config.clone(),
             ranking,
             theme: config.theme.to_owned().clone().into(),
-            clipboard_content: vec![],
+            clipboard_content,
             tray_icon: None,
             sender: None,
             page: Page::Main,
@@ -107,6 +112,7 @@ pub fn new(hotkeys: Hotkeys, config: &Config) -> (Tile, Task<Message>) {
             debouncer: Debouncer::new(config.debounce_delay),
             settings_window: None,
             previous_input_source: None,
+            conn,
         },
         Task::batch([open.map(|_| Message::OpenWindow)]),
     )

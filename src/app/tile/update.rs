@@ -44,6 +44,7 @@ use crate::config::Config;
 use crate::config::MainPage;
 use crate::config::Position;
 use crate::config::ThemeMode;
+use crate::database::store_clipboard_content;
 use crate::debounce::DebouncePolicy;
 use crate::platform::macos::events::Event;
 use crate::platform::macos::launching::Shortcut;
@@ -657,7 +658,13 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
             }
             match action {
                 Editable::Create(content) => {
+                    if tile.clipboard_content.len() >= 300 {
+                        //  hard limit of 300 items at once
+                        tile.clipboard_content.pop();
+                    }
+
                     if !tile.clipboard_content.contains(&content) {
+                        store_clipboard_content(&tile.conn, &content);
                         tile.clipboard_content.insert(0, content);
                         return Task::none();
                     }

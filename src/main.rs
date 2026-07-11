@@ -6,6 +6,7 @@ mod calculator;
 mod clipboard;
 mod commands;
 mod config;
+mod database;
 mod debounce;
 mod platform;
 mod quit;
