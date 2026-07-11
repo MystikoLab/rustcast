@@ -17,6 +17,10 @@ use crate::{
     app::{Message, tile::ExtSender},
     platform::macos::accessibility::ensure_accessibility_permission,
 };
+use iced::keyboard::{
+    Modifiers,
+    key::{Code, Physical},
+};
 
 #[derive(Clone, Debug)]
 pub struct EventTapHandle {
@@ -231,6 +235,242 @@ impl Shortcut {
             if has_mods { Some(mods) } else { None },
         ))
     }
+
+    pub fn from_iced(physical_key: Physical, modifiers: Modifiers) -> Option<Self> {
+        let Physical::Code(code) = physical_key else {
+            return None;
+        };
+
+        let key_code = match code {
+            Code::KeyA => 0x00,
+            Code::KeyS => 0x01,
+            Code::KeyD => 0x02,
+            Code::KeyF => 0x03,
+            Code::KeyH => 0x04,
+            Code::KeyG => 0x05,
+            Code::KeyZ => 0x06,
+            Code::KeyX => 0x07,
+            Code::KeyC => 0x08,
+            Code::KeyV => 0x09,
+            Code::KeyB => 0x0b,
+            Code::KeyQ => 0x0c,
+            Code::KeyW => 0x0d,
+            Code::KeyE => 0x0e,
+            Code::KeyR => 0x0f,
+            Code::KeyY => 0x10,
+            Code::KeyT => 0x11,
+            Code::KeyO => 0x1f,
+            Code::KeyU => 0x20,
+            Code::KeyI => 0x22,
+            Code::KeyP => 0x23,
+            Code::KeyL => 0x25,
+            Code::KeyJ => 0x26,
+            Code::KeyK => 0x28,
+            Code::KeyN => 0x2d,
+            Code::KeyM => 0x2e,
+            Code::Digit1 => 0x12,
+            Code::Digit2 => 0x13,
+            Code::Digit3 => 0x14,
+            Code::Digit4 => 0x15,
+            Code::Digit5 => 0x17,
+            Code::Digit6 => 0x16,
+            Code::Digit7 => 0x1a,
+            Code::Digit8 => 0x1c,
+            Code::Digit9 => 0x19,
+            Code::Digit0 => 0x1d,
+            Code::Enter => 0x24,
+            Code::Tab => 0x30,
+            Code::Space => 0x31,
+            Code::Backspace => 0x33,
+            Code::Escape => 0x35,
+            Code::ArrowLeft => 0x7b,
+            Code::ArrowRight => 0x7c,
+            Code::ArrowDown => 0x7d,
+            Code::ArrowUp => 0x7e,
+            Code::Home => 0x73,
+            Code::End => 0x77,
+            Code::PageUp => 0x74,
+            Code::PageDown => 0x79,
+            Code::F1 => 0x7a,
+            Code::F2 => 0x78,
+            Code::F3 => 0x63,
+            Code::F4 => 0x76,
+            Code::F5 => 0x60,
+            Code::F6 => 0x61,
+            Code::F7 => 0x62,
+            Code::F8 => 0x64,
+            Code::F9 => 0x65,
+            Code::F10 => 0x6d,
+            Code::F11 => 0x67,
+            Code::F12 => 0x6f,
+            Code::Minus => 0x1b,
+            Code::Equal => 0x18,
+            Code::BracketLeft => 0x21,
+            Code::BracketRight => 0x1e,
+            Code::Backslash => 0x2a,
+            Code::Semicolon => 0x29,
+            Code::Quote => 0x27,
+            Code::Backquote => 0x32,
+            Code::Comma => 0x2b,
+            Code::Period => 0x2f,
+            Code::Slash => 0x2c,
+            _ => return None,
+        };
+
+        let mut mods = NSEventModifierFlags::empty();
+        if modifiers.logo() {
+            mods |= NSEventModifierFlags::Command;
+        }
+        if modifiers.alt() {
+            mods |= NSEventModifierFlags::Option;
+        }
+        if modifiers.control() {
+            mods |= NSEventModifierFlags::Control;
+        }
+        if modifiers.shift() {
+            mods |= NSEventModifierFlags::Shift;
+        }
+        if mods.is_empty() {
+            return None;
+        }
+
+        Some(Self::new(Some(key_code), Some(mods.0)))
+    }
+
+    pub fn to_config_string(&self) -> String {
+        let mut parts = Vec::new();
+        let mods = self.mods.unwrap_or_default();
+        if mods & NSEventModifierFlags::Command.0 != 0 {
+            parts.push("cmd".to_string());
+        }
+        if mods & NSEventModifierFlags::Option.0 != 0 {
+            parts.push("option".to_string());
+        }
+        if mods & NSEventModifierFlags::Control.0 != 0 {
+            parts.push("ctrl".to_string());
+        }
+        if mods & NSEventModifierFlags::Shift.0 != 0 {
+            parts.push("shift".to_string());
+        }
+        if let Some(key_code) = self.key_code.and_then(keycode_to_name) {
+            parts.push(key_code.to_string());
+        }
+        parts.join("+")
+    }
+
+    pub fn display_string(&self) -> String {
+        let mut display = String::new();
+        let mods = self.mods.unwrap_or_default();
+        if mods & NSEventModifierFlags::Command.0 != 0 {
+            display.push('⌘');
+        }
+        if mods & NSEventModifierFlags::Option.0 != 0 {
+            display.push('⌥');
+        }
+        if mods & NSEventModifierFlags::Control.0 != 0 {
+            display.push('⌃');
+        }
+        if mods & NSEventModifierFlags::Shift.0 != 0 {
+            display.push('⇧');
+        }
+        if let Some(key) = self.key_code.and_then(keycode_to_name) {
+            let key = match key {
+                "return" => "↩",
+                "space" => "Space",
+                "delete" => "⌫",
+                "escape" => "⎋",
+                "left" => "←",
+                "right" => "→",
+                "down" => "↓",
+                "up" => "↑",
+                _ => key,
+            };
+            if key.len() == 1 && key.as_bytes()[0].is_ascii_alphabetic() {
+                display.push_str(&key.to_ascii_uppercase());
+            } else {
+                display.push_str(key);
+            }
+        }
+        display
+    }
+}
+
+fn keycode_to_name(code: u16) -> Option<&'static str> {
+    Some(match code {
+        0x00 => "a",
+        0x01 => "s",
+        0x02 => "d",
+        0x03 => "f",
+        0x04 => "h",
+        0x05 => "g",
+        0x06 => "z",
+        0x07 => "x",
+        0x08 => "c",
+        0x09 => "v",
+        0x0b => "b",
+        0x0c => "q",
+        0x0d => "w",
+        0x0e => "e",
+        0x0f => "r",
+        0x10 => "y",
+        0x11 => "t",
+        0x1f => "o",
+        0x20 => "u",
+        0x22 => "i",
+        0x23 => "p",
+        0x25 => "l",
+        0x26 => "j",
+        0x28 => "k",
+        0x2d => "n",
+        0x2e => "m",
+        0x12 => "1",
+        0x13 => "2",
+        0x14 => "3",
+        0x15 => "4",
+        0x17 => "5",
+        0x16 => "6",
+        0x1a => "7",
+        0x1c => "8",
+        0x19 => "9",
+        0x1d => "0",
+        0x24 => "return",
+        0x30 => "tab",
+        0x31 => "space",
+        0x33 => "delete",
+        0x35 => "escape",
+        0x7b => "left",
+        0x7c => "right",
+        0x7d => "down",
+        0x7e => "up",
+        0x73 => "home",
+        0x77 => "end",
+        0x74 => "pageup",
+        0x79 => "pagedown",
+        0x7a => "f1",
+        0x78 => "f2",
+        0x63 => "f3",
+        0x76 => "f4",
+        0x60 => "f5",
+        0x61 => "f6",
+        0x62 => "f7",
+        0x64 => "f8",
+        0x65 => "f9",
+        0x6d => "f10",
+        0x67 => "f11",
+        0x6f => "f12",
+        0x1b => "-",
+        0x18 => "=",
+        0x21 => "[",
+        0x1e => "]",
+        0x2a => "\\",
+        0x29 => ";",
+        0x27 => "'",
+        0x32 => "`",
+        0x2b => ",",
+        0x2f => ".",
+        0x2c => "/",
+        _ => return None,
+    })
 }
 
 fn str_to_keycode(s: &str) -> Result<u16, String> {
@@ -316,9 +556,31 @@ fn str_to_keycode(s: &str) -> Result<u16, String> {
         "," | "comma" => 0x2b,
         "." | "period" => 0x2f,
         "/" | "slash" => 0x2c,
-
         _ => return Err(format!("Unknown key: '{}'", s)),
     };
 
     Ok(code)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn recorded_shortcut_uses_config_format() -> Result<(), String> {
+        let shortcut = Shortcut::from_iced(
+            Physical::Code(Code::KeyK),
+            Modifiers::LOGO | Modifiers::SHIFT,
+        )
+        .ok_or_else(|| "modified shortcut should be recorded".to_string())?;
+
+        assert_eq!(shortcut.to_config_string(), "cmd+shift+k");
+        assert_eq!(shortcut.display_string(), "⌘⇧K");
+        Ok(())
+    }
+
+    #[test]
+    fn recorded_shortcut_requires_a_modifier() {
+        assert!(Shortcut::from_iced(Physical::Code(Code::KeyK), Modifiers::NONE).is_none());
+    }
 }
