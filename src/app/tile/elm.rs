@@ -106,6 +106,7 @@ pub fn new(hotkeys: Hotkeys, config: &Config) -> (Tile, Task<Message>) {
             settings_tab: SettingsTab::General,
             debouncer: Debouncer::new(config.debounce_delay),
             settings_window: None,
+            previous_input_source: None,
         },
         Task::batch([open.map(|_| Message::OpenWindow)]),
     )

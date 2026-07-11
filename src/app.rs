@@ -194,6 +194,7 @@ pub enum SetConfigFields {
     SetThemeFields(SetConfigThemeFields),
     SetBufferFields(SetConfigBufferFields),
     ClipboardPasteOnSelect(bool),
+    InputSourceOnOpen(Option<String>),
 }
 
 #[derive(Debug, Clone)]

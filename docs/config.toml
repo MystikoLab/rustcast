@@ -23,6 +23,16 @@ show_trayicon = true
 # hotkey for opening clipboard history
 clipboard_hotkey = "SUPER+SHIFT+2"
 
+# Switch to this macOS input source when RustCast opens.
+# Leave unset to keep the current input source.
+# You can also configure this from the Settings page.
+# The input source must be enabled in macOS Keyboard settings.
+# Examples: "com.apple.keylayout.US", "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+# input_source_on_open = "com.apple.keylayout.US"
+
+# Restore the previously active input source when RustCast closes.
+restore_input_source_on_close = true
+
 # Create a presentation.sh file and you can make it do pretty much anything 
 # Example usage: 
 # 	- turn on / off your WM in different "modes"

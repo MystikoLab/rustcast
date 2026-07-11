@@ -347,6 +347,55 @@ fn general_tab(config: Box<Config>, theme: crate::config::Theme) -> Column<'stat
         .height(SETTINGS_ITEM_HEIGHT),
     );
 
+    let input_sources = crate::platform::macos::input_source::enabled_input_sources();
+    let input_source_enabled = config.input_source_on_open.is_some();
+    let input_source_default = config
+        .input_source_on_open
+        .clone()
+        .filter(|selected| input_sources.iter().any(|source| &source.id == selected))
+        .or_else(|| input_sources.first().map(|source| source.id.clone()));
+    let input_source_toggle = settings_row_without_reset(settings_item_row([
+        settings_hint_text(
+            theme.clone(),
+            "Input source switching",
+            Some("Switch keyboard input while RustCast is open"),
+        ),
+        Space::new().width(Length::Fill).into(),
+        toggler(input_source_enabled)
+            .style(move |_, status| settings_toggle_style(status))
+            .on_toggle(move |enabled| {
+                Message::SetConfig(SetConfigFields::InputSourceOnOpen(if enabled {
+                    input_source_default.clone()
+                } else {
+                    None
+                }))
+            })
+            .into(),
+    ]));
+
+    let input_source_dropdown = if input_source_enabled && !input_sources.is_empty() {
+        let selected_input_source = config.input_source_on_open.as_ref().and_then(|selected| {
+            input_sources
+                .iter()
+                .find(|source| &source.id == selected)
+                .cloned()
+        });
+        let theme_clone = theme.clone();
+        let theme_clone_2 = theme.clone();
+        settings_row_without_reset(settings_item_row([
+            settings_hint_text(theme.clone(), "Input source on open", None::<String>),
+            Space::new().width(Length::Fill).into(),
+            pick_list(input_sources, selected_input_source, |source| {
+                Message::SetConfig(SetConfigFields::InputSourceOnOpen(Some(source.id)))
+            })
+            .style(move |_, status| picklist_style(&theme_clone, status))
+            .menu_style(move |_| picklist_menu_style(&theme_clone_2))
+            .into(),
+        ]))
+    } else {
+        Space::new().height(0).into()
+    };
+
     let theme_clone = theme.clone();
     let auto_suggest = settings_row_without_reset(settings_item_row([
         settings_hint_text(theme.clone(), "Suggestions on open", None::<String>),
@@ -422,6 +471,8 @@ fn general_tab(config: Box<Config>, theme: crate::config::Theme) -> Column<'stat
         tray_icon,
         clipboard_history,
         cbhist_paste_on_select,
+        input_source_toggle,
+        input_source_dropdown,
         auto_suggest,
     ])
     .spacing(10)

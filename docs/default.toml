@@ -7,6 +7,9 @@ haptic_feedback = false
 show_trayicon = true
 shells = []
 clipboard_hotkey = "SUPER+SHIFT+C"
+# Also configurable from the Settings page.
+# input_source_on_open = "com.apple.keylayout.US"
+restore_input_source_on_close = true
 
 [buffer_rules]
 clear_on_hide = true

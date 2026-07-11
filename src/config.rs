@@ -114,6 +114,8 @@ pub struct Config {
     pub log_path: String,
     pub debounce_delay: u64,
     pub auto_update: bool,
+    pub input_source_on_open: Option<String>,
+    pub restore_input_source_on_close: bool,
 }
 
 impl Default for Config {
@@ -141,6 +143,8 @@ impl Default for Config {
             aliases: HashMap::new(),
             shells: vec![],
             debounce_delay: 300,
+            input_source_on_open: None,
+            restore_input_source_on_close: true,
         }
     }
 }
@@ -386,6 +390,8 @@ mod tests {
         assert_eq!(config.search_dirs, vec!["~".to_string()]);
         assert_eq!(config.debounce_delay, 300);
         assert_eq!(config.main_page, MainPage::Blank);
+        assert_eq!(config.input_source_on_open, None);
+        assert!(config.restore_input_source_on_close);
     }
 
     #[test]

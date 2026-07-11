@@ -3,6 +3,7 @@ pub mod accessibility;
 pub mod discovery;
 pub mod events;
 pub mod haptics;
+pub mod input_source;
 pub mod launching;
 pub mod urlscheme;
 pub mod window;

@@ -8,3 +8,4 @@
 1. Easter eggs (_randomvar_, _67_ and _lemon_)
 1. Haptics (for macos only rn)
 1. Opening settings file from searching
+1. Switching macOS input source while RustCast is open

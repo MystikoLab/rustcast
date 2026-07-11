@@ -115,6 +115,7 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
     match message {
         Message::OpenWindow => {
             tile.capture_frontmost();
+            tile.switch_input_source_on_open();
             focus_this_app();
             tile.focused = true;
             tile.visible = true;
@@ -566,6 +567,7 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
                 return Task::none();
             }
             info!("Hiding RustCast window");
+            tile.restore_input_source_on_close();
             tile.visible = false;
             tile.focused = false;
             tile.page = Page::Main;
@@ -975,6 +977,9 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
                 }
                 SetConfigFields::ClipboardPasteOnSelect(v) => {
                     final_config.cbhist_paste_on_select = v
+                }
+                SetConfigFields::InputSourceOnOpen(input_source) => {
+                    final_config.input_source_on_open = input_source
                 }
                 SetConfigFields::ToDefault => {
                     final_config = Config::default();
@@ -1453,6 +1458,7 @@ mod tests {
             settings_tab: crate::app::SettingsTab::General,
             debouncer: crate::debounce::Debouncer::new(10),
             settings_window: None,
+            previous_input_source: None,
         }
     }
 

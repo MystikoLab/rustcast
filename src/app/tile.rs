@@ -204,6 +204,37 @@ pub struct Tile {
     pub settings_tab: crate::app::SettingsTab,
     debouncer: Debouncer,
     pub settings_window: Option<window::Id>,
+    previous_input_source: Option<String>,
+}
+
+impl Tile {
+    pub fn switch_input_source_on_open(&mut self) {
+        let Some(input_source) = self.config.input_source_on_open.clone() else {
+            return;
+        };
+
+        self.previous_input_source =
+            crate::platform::macos::input_source::current_input_source_id();
+
+        if let Err(err) = crate::platform::macos::input_source::select_input_source(&input_source) {
+            log::error!("Failed to switch input source to {input_source}: {err}");
+        }
+    }
+
+    pub fn restore_input_source_on_close(&mut self) {
+        if !self.config.restore_input_source_on_close {
+            self.previous_input_source = None;
+            return;
+        }
+
+        let Some(input_source) = self.previous_input_source.take() else {
+            return;
+        };
+
+        if let Err(err) = crate::platform::macos::input_source::select_input_source(&input_source) {
+            log::error!("Failed to restore input source to {input_source}: {err}");
+        }
+    }
 }
 
 /// A struct to store all the hotkeys
