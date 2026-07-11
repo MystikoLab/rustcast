@@ -1401,6 +1401,7 @@ mod tests {
     use super::*;
     use crate::app::tile::{AppIndex, Hotkeys};
     use crate::config::{Buffer, Theme};
+    use crate::database::initialise_database;
     use crate::platform::macos::launching::Shortcut;
 
     fn test_app(search_name: &str, command: AppCommand, ranking: i32) -> App {
@@ -1464,6 +1465,7 @@ mod tests {
             debouncer: crate::debounce::Debouncer::new(10),
             settings_window: None,
             previous_input_source: None,
+            conn: initialise_database(),
         }
     }
 
