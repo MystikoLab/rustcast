@@ -1023,30 +1023,6 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
                 ResetField::Placeholder => tile.config.placeholder = default.placeholder,
                 ResetField::SearchUrl => tile.config.search_url = default.search_url,
                 ResetField::DebounceDelay => tile.config.debounce_delay = default.debounce_delay,
-                ResetField::StartAtLogin => tile.config.start_at_login = default.start_at_login,
-                ResetField::AutoUpdate => tile.config.auto_update = default.auto_update,
-                ResetField::HapticFeedback => tile.config.haptic_feedback = default.haptic_feedback,
-                ResetField::ShowMenubarIcon => tile.config.show_trayicon = default.show_trayicon,
-                ResetField::ClipboardHistory => tile.config.cbhist = default.cbhist,
-                ResetField::MainPage => tile.config.main_page = default.main_page,
-                ResetField::ThemeMode => {
-                    tile.config.theme.theme_mode = default.theme.theme_mode;
-                    let is_dark = crate::platform::macos::is_dark_mode();
-                    let (text, bg, secondary) = default.theme.theme_mode.presets(is_dark);
-                    tile.config.theme.text_color = text;
-                    tile.config.theme.background_color = bg;
-                    tile.config.theme.secondary_bg_color = secondary;
-                }
-                ResetField::ShowScrollbar => {
-                    tile.config.theme.show_scroll_bar = default.theme.show_scroll_bar
-                }
-                ResetField::ClearOnHide => {
-                    tile.config.buffer_rules.clear_on_hide = default.buffer_rules.clear_on_hide
-                }
-                ResetField::ClearOnEnter => {
-                    tile.config.buffer_rules.clear_on_enter = default.buffer_rules.clear_on_enter
-                }
-                ResetField::ShowIcons => tile.config.theme.show_icons = default.theme.show_icons,
                 ResetField::Font => tile.config.theme.font = default.theme.font,
                 ResetField::EventDuration => tile.config.event_duration = default.event_duration,
                 ResetField::TextColor => tile.config.theme.text_color = default.theme.text_color,
@@ -1057,9 +1033,6 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
                 ResetField::Modes => tile.config.modes = default.modes,
                 ResetField::SearchDirs => tile.config.search_dirs = default.search_dirs,
                 ResetField::ShellCommands => tile.config.shells = default.shells,
-                ResetField::ClipboardPasteOnSelect => {
-                    tile.config.cbhist_paste_on_select = default.cbhist_paste_on_select
-                }
             }
             if reset_hotkey {
                 if let Ok(shortcut) = Shortcut::parse(&tile.config.toggle_hotkey) {
