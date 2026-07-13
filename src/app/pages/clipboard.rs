@@ -32,7 +32,7 @@ use crate::{
 /// - the iced Element to render
 pub fn clipboard_view(
     query: String,
-    clipboard_content: Vec<ClipBoardContentType>,
+    clipboard_content: &[ClipBoardContentType],
     focussed_id: u32,
     theme: Theme,
 ) -> Element<'static, Message> {

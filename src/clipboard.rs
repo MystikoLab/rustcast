@@ -39,7 +39,9 @@ impl PartialEq for ClipBoardContentType {
         } else if let Self::Image(image_data) = self
             && let Self::Image(other_image_data) = other
         {
-            return image_data.bytes == other_image_data.bytes;
+            return image_data.width == other_image_data.width
+                && image_data.height == other_image_data.height
+                && image_data.bytes == other_image_data.bytes;
         } else if let Self::Url(a) = self
             && let Self::Url(b) = other
         {
@@ -112,7 +114,7 @@ mod tests {
 
     #[test]
     fn clipboard_to_app_truncates_and_uses_first_line_for_display() {
-        let item =
+        let _item =
             ClipBoardContentType::Text("abcdefghijklmnopqrstuvwxyz\nsecond line".to_string());
 
         // let app = item.to_app();
@@ -120,5 +122,21 @@ mod tests {
         // assert_eq!(app.display_name, "abcdefghijklmnopqrstuvwxy");
         // assert_eq!(app.search_name, "abcdefghijklmnopqrstuvwxy");
         // assert_eq!(app.desc, "Clipboard Item");
+    }
+
+    #[test]
+    fn clipboard_image_equality_includes_dimensions() {
+        let first = ClipBoardContentType::Image(ImageData {
+            width: 1,
+            height: 2,
+            bytes: vec![0; 8].into(),
+        });
+        let second = ClipBoardContentType::Image(ImageData {
+            width: 2,
+            height: 1,
+            bytes: vec![0; 8].into(),
+        });
+
+        assert_ne!(first, second);
     }
 }

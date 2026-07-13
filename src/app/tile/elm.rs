@@ -21,7 +21,6 @@ use crate::app::pages::settings::settings_page;
 use crate::app::tile::{AppIndex, Hotkeys};
 use crate::app::{DEFAULT_WINDOW_HEIGHT, SettingsTab, ToApp, ToApps};
 use crate::config::Theme;
-use crate::database::load_clipboard;
 use crate::debounce::Debouncer;
 use crate::platform::macos::events::Event;
 use crate::styles::{
@@ -81,7 +80,7 @@ pub fn new(hotkeys: Hotkeys, config: &Config) -> (Tile, Task<Message>) {
 
     let conn = database::initialise_database();
 
-    let clipboard_content = load_clipboard(&conn);
+    let load_clipboard = crate::app::tile::update::load_clipboard_task(0);
 
     (
         Tile {
@@ -101,7 +100,8 @@ pub fn new(hotkeys: Hotkeys, config: &Config) -> (Tile, Task<Message>) {
             config: config.clone(),
             ranking,
             theme: config.theme.to_owned().clone().into(),
-            clipboard_content,
+            clipboard_content: vec![],
+            clipboard_generation: 0,
             tray_icon: None,
             sender: None,
             page: Page::Main,
@@ -114,7 +114,7 @@ pub fn new(hotkeys: Hotkeys, config: &Config) -> (Tile, Task<Message>) {
             previous_input_source: None,
             conn,
         },
-        Task::batch([open.map(|_| Message::OpenWindow)]),
+        Task::batch([open.map(|_| Message::OpenWindow), load_clipboard]),
     )
 }
 
@@ -150,7 +150,7 @@ pub fn view(tile: &Tile, wid: window::Id) -> Element<'_, Message> {
         let results = match tile.page {
             Page::ClipboardHistory => clipboard_view(
                 tile.query_lc.clone(),
-                tile.clipboard_content.clone(),
+                &tile.clipboard_content,
                 tile.focus_id,
                 tile.config.theme.clone(),
             ),

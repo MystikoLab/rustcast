@@ -196,6 +196,7 @@ pub struct Tile {
     pub config: Config,
     hotkeys: Hotkeys,
     clipboard_content: Vec<ClipBoardContentType>,
+    clipboard_generation: u64,
     tray_icon: Option<TrayIcon>,
     sender: Option<ExtSender>,
     page: Page,

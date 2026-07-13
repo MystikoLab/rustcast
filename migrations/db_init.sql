@@ -3,6 +3,8 @@ CREATE TABLE clipboard_entries (
     content_type TEXT NOT NULL CHECK(content_type IN ('text', 'url', 'image')),
     text_content TEXT,
     blob_content BLOB,
+    image_width INTEGER,
+    image_height INTEGER,
     created_at  INTEGER NOT NULL,
     size_bytes  INTEGER NOT NULL
 );

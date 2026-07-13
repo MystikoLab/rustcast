@@ -158,6 +158,7 @@ pub enum Message {
     UpdateApps,
     SetSender(ExtSender),
     SwitchToPage(Page),
+    ClipboardHistoryLoaded(u64, Result<Vec<ClipBoardContentType>, String>),
     EditClipboardHistory(Editable<ClipBoardContentType>),
     ClearClipboardHistory,
     ChangeFocus(ArrowKey, u32),

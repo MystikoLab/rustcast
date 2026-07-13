@@ -14,7 +14,6 @@ use iced::window::Id;
 use log::info;
 use objc2::MainThreadMarker;
 use objc2_app_kit::NSApplication;
-use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
 use rayon::slice::ParallelSliceMut;
 use url::Url;
@@ -44,7 +43,10 @@ use crate::config::Config;
 use crate::config::MainPage;
 use crate::config::Position;
 use crate::config::ThemeMode;
-use crate::database::store_clipboard_content;
+use crate::database::{
+    clear_clipboard, delete_clipboard_content, load_clipboard_in_background,
+    store_clipboard_content, update_clipboard_content,
+};
 use crate::debounce::DebouncePolicy;
 use crate::platform::macos::events::Event;
 use crate::platform::macos::launching::Shortcut;
@@ -109,6 +111,12 @@ fn message_for_open_command(command: &AppCommand) -> Message {
         AppCommand::Message(msg) => msg.clone(),
         AppCommand::Display => Message::ReturnFocus,
     }
+}
+
+pub fn load_clipboard_task(generation: u64) -> Task<Message> {
+    Task::perform(load_clipboard_in_background(), move |result| {
+        Message::ClipboardHistoryLoaded(generation, result)
+    })
 }
 
 /// Handle the "elm" update
@@ -652,57 +660,56 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
                 Task::none()
             }
         }
+        Message::ClipboardHistoryLoaded(generation, result) => {
+            if generation != tile.clipboard_generation {
+                return load_clipboard_task(tile.clipboard_generation);
+            }
+
+            match result {
+                Ok(content) => tile.clipboard_content = content,
+                Err(error) => log::error!("Failed to load clipboard history: {error}"),
+            }
+            Task::none()
+        }
         Message::EditClipboardHistory(action) => {
             if !tile.config.cbhist {
                 return Task::none();
             }
             match action {
                 Editable::Create(content) => {
+                    if let Err(error) = store_clipboard_content(&tile.conn, &content) {
+                        log::error!("Failed to store clipboard content: {error}");
+                        return Task::none();
+                    }
+
+                    if let Some(index) = tile.clipboard_content.iter().position(|x| x == &content) {
+                        tile.clipboard_content.remove(index);
+                    }
+
                     if tile.clipboard_content.len() >= 300 {
                         //  hard limit of 300 items at once
                         tile.clipboard_content.pop();
                     }
 
-                    if !tile.clipboard_content.contains(&content) {
-                        store_clipboard_content(&tile.conn, &content);
-                        tile.clipboard_content.insert(0, content);
-                        return Task::none();
-                    }
-
-                    let new_content_vec = tile
-                        .clipboard_content
-                        .par_iter()
-                        .filter_map(|x| {
-                            if *x == content {
-                                None
-                            } else {
-                                Some(x.to_owned())
-                            }
-                        })
-                        .collect();
-
-                    tile.clipboard_content = new_content_vec;
                     tile.clipboard_content.insert(0, content);
+                    tile.clipboard_generation += 1;
                 }
                 Editable::Delete(content) => {
-                    tile.clipboard_content = tile
-                        .clipboard_content
-                        .iter()
-                        .filter_map(|x| {
-                            if *x == content {
-                                None
-                            } else {
-                                Some(x.to_owned())
-                            }
-                        })
-                        .collect();
+                    if let Err(error) = delete_clipboard_content(&tile.conn, &content) {
+                        log::error!("Failed to delete clipboard content: {error}");
+                        return Task::none();
+                    }
+                    tile.clipboard_content.retain(|x| x != &content);
+                    tile.clipboard_generation += 1;
                 }
                 Editable::Update { old, new } => {
-                    tile.clipboard_content = tile
-                        .clipboard_content
-                        .iter()
-                        .map(|x| if x == &old { new.clone() } else { x.to_owned() })
-                        .collect();
+                    if let Err(error) = update_clipboard_content(&tile.conn, &old, &new) {
+                        log::error!("Failed to update clipboard content: {error}");
+                        return Task::none();
+                    }
+                    tile.clipboard_content.retain(|x| x != &old && x != &new);
+                    tile.clipboard_content.insert(0, new);
+                    tile.clipboard_generation += 1;
                 }
             }
             Task::none()
@@ -1072,7 +1079,12 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
             Task::batch([Task::done(Message::ReloadConfig), Task::none()])
         }
         Message::ClearClipboardHistory => {
+            if let Err(error) = clear_clipboard(&tile.conn) {
+                log::error!("Failed to clear clipboard history: {error}");
+                return Task::none();
+            }
             tile.clipboard_content.clear();
+            tile.clipboard_generation += 1;
             Task::none()
         }
         Message::SimulatePaste(pid) => {
@@ -1455,6 +1467,7 @@ mod tests {
                 handle: None,
             },
             clipboard_content: Vec::new(),
+            clipboard_generation: 0,
             tray_icon: None,
             sender: None,
             page: Page::Main,
