@@ -157,7 +157,13 @@ And the updated list of contributors to the macos version:
 
 ## If you like rustcast, consider starring it on github :)
 
-[![Star History Chart](https://api.star-history.com/svg?repos=MystikoLab/rustcast&type=date&legend=top-left)](https://www.star-history.com/#MystikoLab/rustcast&type=date&legend=top-left)
+<a href="https://www.star-history.com/?repos=MystikoLab%2Frustcast&type=date&logscale=&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=MystikoLab/rustcast&type=date&theme=dark&logscale&legend=top-left&sealed_token=EtM2v-ntr2wpPFNfmn0rtwFAOKe16HhLZoKa_jXAtnoueqAqttIf1KVHibKwqsolfB2hH5NLe414Qk35D25WEnTSrXDDntmh4lt4ETr6o2SBkbU2BXfw6fMGFXIpKrtGa-r_qzdJpwREp_I_qI1yNCjXMVAtoztK3BPSrVzvqFPIMnca9GMqncdJKrvx" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=MystikoLab/rustcast&type=date&logscale&legend=top-left&sealed_token=EtM2v-ntr2wpPFNfmn0rtwFAOKe16HhLZoKa_jXAtnoueqAqttIf1KVHibKwqsolfB2hH5NLe414Qk35D25WEnTSrXDDntmh4lt4ETr6o2SBkbU2BXfw6fMGFXIpKrtGa-r_qzdJpwREp_I_qI1yNCjXMVAtoztK3BPSrVzvqFPIMnca9GMqncdJKrvx" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=MystikoLab/rustcast&type=date&logscale&legend=top-left&sealed_token=EtM2v-ntr2wpPFNfmn0rtwFAOKe16HhLZoKa_jXAtnoueqAqttIf1KVHibKwqsolfB2hH5NLe414Qk35D25WEnTSrXDDntmh4lt4ETr6o2SBkbU2BXfw6fMGFXIpKrtGa-r_qzdJpwREp_I_qI1yNCjXMVAtoztK3BPSrVzvqFPIMnca9GMqncdJKrvx" />
+ </picture>
+</a>
 
 ## Motivations:
 
