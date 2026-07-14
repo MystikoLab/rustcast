@@ -8,7 +8,6 @@ use objc2_foundation::NSURL;
 
 use crate::{
     app::apps::{App, AppCommand, AppIcon},
-    calculator::Expr,
     clipboard::ClipBoardContentType,
     config::Config,
     quit::{terminate_all_apps, terminate_app},
@@ -26,7 +25,6 @@ pub enum Function {
     RandomVar(i32), // Easter egg function
     CopyToClipboard(ClipBoardContentType),
     GoogleSearch(String),
-    Calculate(Expr),
     Quit,
     TileWindow(crate::platform::macos::window::TilePosition),
 }
@@ -104,13 +102,6 @@ impl Function {
                         .unwrap(),
                     );
                 });
-            }
-
-            Function::Calculate(expr) => {
-                Clipboard::new()
-                    .unwrap()
-                    .set_text(expr.eval().map(|x| x.to_string()).unwrap_or("".to_string()))
-                    .unwrap_or(());
             }
 
             Function::CopyToClipboard(clipboard_content) => match clipboard_content {

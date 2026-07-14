@@ -2,7 +2,6 @@
 
 mod app;
 mod autoupdate;
-mod calculator;
 mod clipboard;
 mod commands;
 mod config;
