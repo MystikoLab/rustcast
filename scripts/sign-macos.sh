@@ -111,6 +111,6 @@ xcrun stapler staple "$APP_PATH"
 
 # --- Step 10: Final Gatekeeper check (AFTER stapling) ---
 echo "Running Gatekeeper assessment..."
-spctl --assess --type execute --verbose "$APP_PATH"
+spctl --assess --verbose "$APP_PATH"
 
 echo "Done! App is signed, notarized, and stapled."
