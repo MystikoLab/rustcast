@@ -35,17 +35,17 @@ pub fn initialise_database() -> Connection {
     conn
 }
 
-pub fn load_clipboard(conn: &Connection) -> Vec<ClipBoardContentType> {
+pub fn load_clipboard(conn: &Connection, limit: u32) -> Vec<ClipBoardContentType> {
     let Ok(mut stmt) = conn.prepare(
         "SELECT content_type, text_content, blob_content
          FROM clipboard_entries
          ORDER BY created_at DESC
-         LIMIT 300",
+         LIMIT ?1",
     ) else {
         return vec![];
     };
 
-    stmt.query_map([], |row| {
+    stmt.query_map([limit], |row| {
         let content_type: String = row.get(0)?;
         match content_type.as_str() {
             "text" => Ok(ClipBoardContentType::Text(row.get(1)?)),

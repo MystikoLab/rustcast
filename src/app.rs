@@ -169,6 +169,7 @@ pub enum Message {
     SimulatePaste(i32),
     OpenSettingsWindow,
     SettingsWindowOpened(window::Id),
+    LoadClipboardData(u32),
 }
 
 #[derive(Debug, Clone)]

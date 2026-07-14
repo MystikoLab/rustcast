@@ -81,8 +81,6 @@ pub fn new(hotkeys: Hotkeys, config: &Config) -> (Tile, Task<Message>) {
 
     let conn = database::initialise_database();
 
-    let clipboard_content = load_clipboard(&conn);
-
     (
         Tile {
             update_available: false,
@@ -101,7 +99,7 @@ pub fn new(hotkeys: Hotkeys, config: &Config) -> (Tile, Task<Message>) {
             config: config.clone(),
             ranking,
             theme: config.theme.to_owned().clone().into(),
-            clipboard_content,
+            clipboard_content: vec![],
             tray_icon: None,
             sender: None,
             page: Page::Main,
@@ -114,7 +112,10 @@ pub fn new(hotkeys: Hotkeys, config: &Config) -> (Tile, Task<Message>) {
             previous_input_source: None,
             conn,
         },
-        Task::batch([open.map(|_| Message::OpenWindow)]),
+        Task::batch([
+            open.map(|_| Message::OpenWindow),
+            Task::done(Message::LoadClipboardData(300)),
+        ]),
     )
 }
 

@@ -78,6 +78,11 @@ pub fn clipboard_view(
                         .map(|(i, content)| {
                             content.render_row(i == focussed_id as usize, &row_render_theme)
                         }),
+                ).push(
+                    Button::new("Load 100 more items")
+                        .width(Length::Fill)
+                        .on_press(Message::LoadClipboardData(clipboard_content.len() as u32 + 100))
+                        .style(open_button_style)
                 )
                 .width((WINDOW_WIDTH + 50.) / 3.),
                 Direction::Vertical(Scrollbar::hidden()),
