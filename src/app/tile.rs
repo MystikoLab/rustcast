@@ -8,6 +8,7 @@ use crate::autoupdate::new_version_available;
 use crate::clipboard::ClipBoardContentType;
 use crate::config::{Config, Shelly};
 use crate::debounce::Debouncer;
+use crate::extensions::ExtensionEngine;
 use crate::platform::default_app_paths;
 use crate::platform::macos::events::Event;
 use crate::platform::macos::launching::{EventTapHandle, Shortcut};
@@ -188,6 +189,7 @@ pub struct Tile {
     query_lc: String,
     results: Vec<App>,
     options: AppIndex,
+    extension_apps: AppIndex,
     emoji_apps: AppIndex,
     visible: bool,
     focused: bool,
@@ -206,6 +208,7 @@ pub struct Tile {
     debouncer: Debouncer,
     pub settings_window: Option<window::Id>,
     previous_input_source: Option<String>,
+    extension_engine: Option<ExtensionEngine>,
     conn: Connection,
 }
 
