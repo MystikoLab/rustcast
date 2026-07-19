@@ -176,7 +176,7 @@ pub fn global_handler(sender: ExtSender, targets: Vec<Shortcut>) -> Result<Event
     })
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Copy, Eq, Hash)]
 pub struct Shortcut {
     pub key_code: Option<u16>,
     pub mods: Option<usize>,
@@ -193,30 +193,85 @@ impl Shortcut {
         let mut mods: usize = 0;
         let mut key_code: Option<u16> = None;
         let mut has_mods = false;
+        let mut modifier_keycode: Option<u16> = None;
 
         for part in &parts {
             match part.to_lowercase().as_str() {
+                // Sided
+                "lcmd" | "lcommand" | "lsuper" => {
+                    mods |= NSEventModifierFlags::Command.0;
+                    has_mods = true;
+                    modifier_keycode = Some(55);
+                }
+                "rcmd" | "rcommand" | "rsuper" => {
+                    mods |= NSEventModifierFlags::Command.0;
+                    has_mods = true;
+                    modifier_keycode = Some(54);
+                }
+                "lopt" | "loption" | "lalt" => {
+                    mods |= NSEventModifierFlags::Option.0;
+                    has_mods = true;
+                    modifier_keycode = Some(58);
+                }
+                "ropt" | "roption" | "ralt" => {
+                    mods |= NSEventModifierFlags::Option.0;
+                    has_mods = true;
+                    modifier_keycode = Some(61);
+                }
+                "lctrl" | "lcontrol" => {
+                    mods |= NSEventModifierFlags::Control.0;
+                    has_mods = true;
+                    modifier_keycode = Some(59);
+                }
+                "rctrl" | "rcontrol" => {
+                    mods |= NSEventModifierFlags::Control.0;
+                    has_mods = true;
+                    modifier_keycode = Some(62);
+                }
+                "lshift" => {
+                    mods |= NSEventModifierFlags::Shift.0;
+                    has_mods = true;
+                    modifier_keycode = Some(56);
+                }
+                "rshift" => {
+                    mods |= NSEventModifierFlags::Shift.0;
+                    has_mods = true;
+                    modifier_keycode = Some(60);
+                }
+
+                // Unsided — default to left keycode
                 "cmd" | "command" | "super" => {
                     mods |= NSEventModifierFlags::Command.0;
                     has_mods = true;
+                    modifier_keycode = Some(55);
                 }
                 "opt" | "option" | "alt" => {
                     mods |= NSEventModifierFlags::Option.0;
                     has_mods = true;
+                    modifier_keycode = Some(58);
                 }
-                "capslock" | "caps" | "caps lock" => mods |= NSEventModifierFlags::CapsLock.0,
                 "ctrl" | "control" => {
                     mods |= NSEventModifierFlags::Control.0;
                     has_mods = true;
+                    modifier_keycode = Some(59);
                 }
                 "shift" => {
                     mods |= NSEventModifierFlags::Shift.0;
                     has_mods = true;
+                    modifier_keycode = Some(56);
                 }
+
+                // No sides
                 "fn" | "function" => {
                     mods |= NSEventModifierFlags::Function.0;
                     has_mods = true;
+                    modifier_keycode = Some(63);
                 }
+                "capslock" | "caps" | "caps lock" => {
+                    mods |= NSEventModifierFlags::CapsLock.0;
+                    modifier_keycode = Some(57);
+                }
+
                 key => {
                     if key_code.is_some() {
                         return Err(format!("Multiple keys specified: '{}'", s));
@@ -226,10 +281,36 @@ impl Shortcut {
             }
         }
 
+        if key_code.is_none() {
+            if let Some(kc) = modifier_keycode {
+                let remaining = mods & !modifier_flag_for_keycode(kc);
+                return Ok(Shortcut::new(
+                    Some(kc),
+                    if remaining != 0 {
+                        Some(remaining)
+                    } else {
+                        None
+                    },
+                ));
+            }
+        }
+
         Ok(Shortcut::new(
             key_code,
             if has_mods { Some(mods) } else { None },
         ))
+    }
+}
+
+fn modifier_flag_for_keycode(kc: u16) -> usize {
+    match kc {
+        56 | 60 => NSEventModifierFlags::Shift.0,
+        59 | 62 => NSEventModifierFlags::Control.0,
+        58 | 61 => NSEventModifierFlags::Option.0,
+        55 | 54 => NSEventModifierFlags::Command.0,
+        63 => NSEventModifierFlags::Function.0,
+        57 => NSEventModifierFlags::CapsLock.0,
+        _ => 0,
     }
 }
 

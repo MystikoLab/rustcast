@@ -89,10 +89,10 @@ fn get_image() -> DynamicImage {
 
 fn init_event_handler(sender: ExtSender, shortcut: Shortcut) {
     let runtime = Runtime::new().unwrap();
-    let shortcut = shortcut.clone();
+    let shortcut = shortcut;
 
     MenuEvent::set_event_handler(Some(move |x: MenuEvent| {
-        let shortcut = shortcut.clone();
+        let shortcut = shortcut;
         let sender = sender.clone();
         let sender = sender.0.clone();
         info!("Menubar event called: {}", x.id.0);
@@ -113,7 +113,7 @@ fn init_event_handler(sender: ExtSender, shortcut: Shortcut) {
                 runtime.spawn(async move {
                     sender
                         .clone()
-                        .try_send(Message::KeyPressed(shortcut.clone()))
+                        .try_send(Message::KeyPressed(shortcut))
                         .unwrap();
                 });
             }

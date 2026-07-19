@@ -51,6 +51,7 @@ use crate::debounce::DebouncePolicy;
 use crate::platform::macos::events::Event;
 use crate::platform::macos::launching::Shortcut;
 use crate::platform::macos::launching::global_handler;
+use crate::platform::macos::send_hyperkey_event;
 use crate::platform::macos::screen_with_mouse;
 use crate::platform::macos::{start_at_login, stop_at_login};
 use crate::quit::get_open_apps;
@@ -391,6 +392,16 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
                 tile.hotkeys.clipboard_hotkey = hotkey
             }
 
+            if let Some(hyperkey) = &new_config
+                .hyperkey_hotkey
+                .as_ref()
+                .and_then(|x| Shortcut::parse(x).ok())
+            {
+                tile.hotkeys.hyperkey = Some(*hyperkey)
+            } else {
+                tile.hotkeys.hyperkey = None
+            }
+
             if let Ok(hotkey) = Shortcut::parse(&new_config.toggle_hotkey) {
                 tile.hotkeys.toggle = hotkey
             }
@@ -444,8 +455,14 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
                 )));
             }
 
+            let is_hyperkey_hotkey = Some(shortcut) == tile.hotkeys.hyperkey;
             let is_clipboard_hotkey = shortcut == tile.hotkeys.clipboard_hotkey;
             let is_open_hotkey = shortcut == tile.hotkeys.toggle;
+
+            if is_hyperkey_hotkey {
+                send_hyperkey_event();
+                return Task::none();
+            }
 
             let clipboard_page_task = if is_clipboard_hotkey {
                 info!("Switching to clipboard page");
@@ -848,6 +865,11 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
             match config.clone() {
                 SetConfigFields::ToggleHotkey(hk) => final_config.toggle_hotkey = hk,
                 SetConfigFields::ClipboardHotkey(hk) => final_config.clipboard_hotkey = hk,
+                SetConfigFields::HyperkeyHotkey(key) => {
+                    if !key.trim().is_empty() {
+                        final_config.hyperkey_hotkey = Some(key);
+                    }
+                }
                 SetConfigFields::ClipboardHistory(cbhist) => final_config.cbhist = cbhist,
                 SetConfigFields::Modes(Editable::Create((key, value))) => {
                     final_config.modes.insert(key, value);
@@ -1461,6 +1483,7 @@ mod tests {
             hotkeys: Hotkeys {
                 toggle: Shortcut::parse("alt+space").unwrap(),
                 clipboard_hotkey: Shortcut::parse("cmd+shift+c").unwrap(),
+                hyperkey: None,
                 shells: HashMap::new(),
                 handle: None,
             },

@@ -95,6 +95,7 @@ impl std::fmt::Display for Position {
 pub struct Config {
     pub toggle_hotkey: String,
     pub clipboard_hotkey: String,
+    pub hyperkey_hotkey: Option<String>,
     pub buffer_rules: Buffer,
     pub event_duration: u32,
     pub main_page: MainPage,
@@ -125,6 +126,7 @@ impl Default for Config {
         Self {
             toggle_hotkey: "ALT+SPACE".to_string(),
             clipboard_hotkey: "SUPER+SHIFT+C".to_string(),
+            hyperkey_hotkey: None,
             buffer_rules: Buffer::default(),
             theme: Theme::default(),
             start_at_login: true,

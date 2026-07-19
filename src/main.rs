@@ -85,6 +85,10 @@ fn main() -> iced::Result {
         toggle: show_hide,
         clipboard_hotkey: cbhist,
         shells: shell_map,
+        hyperkey: config
+            .hyperkey_hotkey
+            .as_ref()
+            .and_then(|x| Shortcut::parse(x).ok()),
         handle: None,
     };
 

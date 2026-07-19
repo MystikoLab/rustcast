@@ -247,12 +247,16 @@ pub struct Hotkeys {
     pub handle: Option<EventTapHandle>,
     pub toggle: Shortcut,
     pub clipboard_hotkey: Shortcut,
+    pub hyperkey: Option<Shortcut>,
     pub shells: HashMap<Shortcut, Shelly>,
 }
 
 impl Hotkeys {
     pub fn all_hotkeys(&self) -> Vec<Shortcut> {
-        let mut a = vec![self.toggle.clone(), self.clipboard_hotkey.clone()];
+        let mut a = vec![self.toggle, self.clipboard_hotkey];
+        if let Some(hyperkey_shortcut) = self.hyperkey {
+            a.push(hyperkey_shortcut);
+        }
         a.extend(
             self.shells
                 .keys()

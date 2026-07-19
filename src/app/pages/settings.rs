@@ -210,6 +210,29 @@ fn general_tab(config: Box<Config>, theme: crate::config::Theme) -> Column<'stat
     );
 
     let theme_clone = theme.clone();
+    let hyperkey = settings_row_with_reset(
+        settings_item_row([
+            settings_hint_text(
+                theme.clone(),
+                "Hyperkey hotkey",
+                Some("Simulate CMD+SHIFT+CTRL+ALT with another hotkey"),
+            ),
+            Space::new().width(Length::Fill).into(),
+            text_input(
+                "Hyperkey Hotkey",
+                &config.hyperkey_hotkey.clone().unwrap_or("".to_string()),
+            )
+            .on_input(|input| Message::SetConfig(SetConfigFields::HyperkeyHotkey(input.clone())))
+            .on_submit(Message::WriteConfig)
+            .width(Length::Fixed(SETTINGS_INPUT_WIDTH))
+            .style(move |_, _| settings_text_input_item_style(&theme_clone))
+            .into(),
+        ]),
+        ResetField::ToggleHotkey,
+        theme.clone(),
+    );
+
+    let theme_clone = theme.clone();
     let placeholder_setting = settings_row_with_reset(
         settings_item_row([
             settings_hint_text(
@@ -470,6 +493,7 @@ fn general_tab(config: Box<Config>, theme: crate::config::Theme) -> Column<'stat
     Column::from_iter([
         hotkey,
         cb_hotkey,
+        hyperkey,
         placeholder_setting,
         search,
         debounce,
