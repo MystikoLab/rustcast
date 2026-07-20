@@ -1,5 +1,6 @@
 //! Main logic for the app
 use std::collections::HashMap;
+use std::path::PathBuf;
 
 use crate::app::apps::{App, AppCommand, AppIcon, ICNS_ICON};
 use crate::commands::Function;
@@ -139,6 +140,11 @@ pub enum Message {
     KeyPressed(Shortcut),
     FocusTextInput(Move),
     HideWindow(Id),
+    AddExtensionApp {
+        display: String,
+        search: String,
+        icon_path: PathBuf,
+    },
     RunFunction(Function),
     OpenFocused,
     SetConfig(SetConfigFields),

@@ -1,5 +1,7 @@
 #![deny(clippy::dbg_macro)]
 
+pub use steel::steel_vm;
+
 mod app;
 mod autoupdate;
 mod clipboard;
@@ -7,6 +9,7 @@ mod commands;
 mod config;
 mod database;
 mod debounce;
+mod extensions;
 mod platform;
 mod quit;
 mod styles;

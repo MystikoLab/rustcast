@@ -48,6 +48,7 @@ use crate::config::ThemeMode;
 use crate::database::load_clipboard;
 use crate::database::store_clipboard_content;
 use crate::debounce::DebouncePolicy;
+use crate::extensions::ExtensionEngine;
 use crate::platform::macos::events::Event;
 use crate::platform::macos::launching::Shortcut;
 use crate::platform::macos::launching::global_handler;
@@ -208,7 +209,20 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
             thread::spawn(move || fs::write(home + "/.config/rustcast/config.toml", confg_str));
             Task::none()
         }
+        Message::AddExtensionApp {
+            display,
+            search,
+            icon_path,
+        } => {
+            dbg!("Adding new extension app");
+            Task::none()
+        }
         Message::SetSender(sender) => {
+            if tile.config.extensions {
+                let eng = ExtensionEngine::new(sender.clone());
+                tile.extension_engine = Some(eng)
+            }
+
             tile.sender = Some(sender.clone());
             match global_handler(sender.clone(), tile.hotkeys.all_hotkeys()) {
                 Ok(a) => tile.hotkeys.handle = Some(a),
