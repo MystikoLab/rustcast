@@ -19,7 +19,7 @@ use rayon::slice::ParallelSliceMut;
 use crate::app::pages::emoji::emoji_page;
 use crate::app::pages::settings::settings_page;
 use crate::app::tile::{AppIndex, Hotkeys};
-use crate::app::{DEFAULT_WINDOW_HEIGHT, SettingsTab, ToApp, ToApps};
+use crate::app::{DEFAULT_WINDOW_HEIGHT, HotkeyCapture, SettingsTab, ToApp, ToApps};
 use crate::config::Theme;
 use crate::database::load_clipboard;
 use crate::debounce::Debouncer;
@@ -116,6 +116,7 @@ pub fn new(hotkeys: Hotkeys, config: &Config) -> (Tile, Task<Message>) {
             settings_tab: SettingsTab::General,
             debouncer: Debouncer::new(config.debounce_delay),
             settings_window: None,
+            hotkey_capture: HotkeyCapture::Idle,
             previous_input_source: None,
             conn,
         },
@@ -126,7 +127,11 @@ pub fn new(hotkeys: Hotkeys, config: &Config) -> (Tile, Task<Message>) {
 /// The elm View function that renders the entire rustcast window
 pub fn view(tile: &Tile, wid: window::Id) -> Element<'_, Message> {
     if tile.settings_window == Some(wid) {
-        return settings_page(tile.config.clone(), tile.settings_tab);
+        return settings_page(
+            tile.config.clone(),
+            tile.settings_tab,
+            tile.hotkey_capture.clone(),
+        );
     };
 
     if tile.visible {

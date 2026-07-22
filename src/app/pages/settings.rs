@@ -31,11 +31,12 @@ use crate::app::FileDialogAction;
 use crate::app::ResetField;
 use crate::app::SetConfigBufferFields;
 use crate::app::SetConfigThemeFields;
-use crate::app::SettingsTab;
+use crate::app::{HotkeyCapture, HotkeyTarget, SettingsTab};
 use crate::commands::Function;
 use crate::config::MainPage;
 use crate::config::Shelly;
 use crate::config::ThemeMode;
+use crate::platform::macos::launching::Shortcut;
 use crate::styles::delete_button_style;
 use crate::styles::settings_add_button_style;
 use crate::styles::settings_radio_button_style;
@@ -53,7 +54,11 @@ const SETTINGS_ITEM_HEIGHT: u32 = 55;
 const SETTINGS_ITEM_COL_SPACING: u32 = 3;
 const SETTINGS_INPUT_WIDTH: f32 = 250.0;
 
-pub fn settings_page(config: Config, settings_tab: SettingsTab) -> Element<'static, Message> {
+pub fn settings_page(
+    config: Config,
+    settings_tab: SettingsTab,
+    hotkey_capture: HotkeyCapture,
+) -> Element<'static, Message> {
     let config = Box::new(config.clone());
     let theme = config.theme.clone();
 
@@ -83,9 +88,9 @@ pub fn settings_page(config: Config, settings_tab: SettingsTab) -> Element<'stat
         .align_x(Alignment::Center);
 
     let tab_content: Column<'static, Message> = match settings_tab {
-        SettingsTab::General => general_tab(config.clone(), theme.clone()),
+        SettingsTab::General => general_tab(config.clone(), theme.clone(), hotkey_capture),
         SettingsTab::Appearance => appearance_tab(config.clone(), theme.clone()),
-        SettingsTab::Commands => commands_tab(config.clone(), theme.clone()),
+        SettingsTab::Commands => commands_tab(config.clone(), theme.clone(), hotkey_capture),
     };
 
     let contents_column = Column::from_iter([
@@ -166,44 +171,44 @@ fn reset_button(theme: crate::config::Theme, field: ResetField) -> Element<'stat
     .into()
 }
 
-fn general_tab(config: Box<Config>, theme: crate::config::Theme) -> Column<'static, Message> {
-    let theme_clone = theme.clone();
+fn general_tab(
+    config: Box<Config>,
+    theme: crate::config::Theme,
+    hotkey_capture: HotkeyCapture,
+) -> Column<'static, Message> {
     let hotkey = settings_row_with_reset(
         settings_item_row([
             settings_hint_text(
                 theme.clone(),
                 "Toggle hotkey",
-                Some("Use \"+\" as a seperator"),
+                Some("Click the field to record and ESC once done"),
             ),
             Space::new().width(Length::Fill).into(),
-            text_input("Toggle Hotkey", &config.toggle_hotkey)
-                .on_input(|input| Message::SetConfig(SetConfigFields::ToggleHotkey(input.clone())))
-                .on_submit(Message::WriteConfig)
-                .width(Length::Fixed(SETTINGS_INPUT_WIDTH))
-                .style(move |_, _| settings_text_input_item_style(&theme_clone))
-                .into(),
+            hotkey_field(
+                &config.toggle_hotkey,
+                HotkeyTarget::Toggle,
+                &hotkey_capture,
+                theme.clone(),
+            ),
         ]),
         ResetField::ToggleHotkey,
         theme.clone(),
     );
 
-    let theme_clone = theme.clone();
     let cb_hotkey = settings_row_with_reset(
         settings_item_row([
             settings_hint_text(
                 theme.clone(),
                 "Clipboard hotkey",
-                Some("Use \"+\" as a seperator"),
+                Some("Click the field to record and ESC once done"),
             ),
             Space::new().width(Length::Fill).into(),
-            text_input("Clipboard Hotkey", &config.clipboard_hotkey)
-                .on_input(|input| {
-                    Message::SetConfig(SetConfigFields::ClipboardHotkey(input.clone()))
-                })
-                .on_submit(Message::WriteConfig)
-                .width(Length::Fixed(SETTINGS_INPUT_WIDTH))
-                .style(move |_, _| settings_text_input_item_style(&theme_clone))
-                .into(),
+            hotkey_field(
+                &config.clipboard_hotkey,
+                HotkeyTarget::Clipboard,
+                &hotkey_capture,
+                theme.clone(),
+            ),
         ]),
         ResetField::ClipboardHotkey,
         theme.clone(),
@@ -486,6 +491,62 @@ fn general_tab(config: Box<Config>, theme: crate::config::Theme) -> Column<'stat
         auto_suggest,
     ])
     .spacing(10)
+}
+
+fn hotkey_field(
+    value: &str,
+    target: HotkeyTarget,
+    capture: &HotkeyCapture,
+    theme: crate::config::Theme,
+) -> Element<'static, Message> {
+    let (label, recording) = match capture {
+        HotkeyCapture::Recording {
+            target: active_target,
+            candidate,
+        } if *active_target == target => (
+            candidate
+                .as_ref()
+                .map(Shortcut::display_string)
+                .unwrap_or_else(|| "Press a shortcut…".to_string()),
+            true,
+        ),
+        _ => (
+            if value.is_empty() {
+                "Click to record".to_string()
+            } else {
+                Shortcut::parse(value)
+                    .map(|shortcut| shortcut.display_string())
+                    .unwrap_or_else(|_| value.to_string())
+            },
+            false,
+        ),
+    };
+    let theme_clone = theme.clone();
+
+    Button::new(
+        Text::new(label)
+            .font(theme.font())
+            .align_y(Alignment::Center)
+            .width(Length::Fill),
+    )
+    .width(Length::Fixed(SETTINGS_INPUT_WIDTH))
+    .height(36)
+    .padding([0, 12])
+    .style(move |_, _| button::Style {
+        text_color: theme_clone.text_color(1.0),
+        background: Some(Background::Color(with_alpha(
+            tint(theme_clone.bg_color(), if recording { 0.16 } else { 0.08 }),
+            0.9,
+        ))),
+        border: Border {
+            color: theme_clone.text_color(if recording { 0.8 } else { 0.3 }),
+            width: if recording { 1.0 } else { 0.2 },
+            radius: Radius::new(10),
+        },
+        ..Default::default()
+    })
+    .on_press(Message::BeginHotkeyCapture(target))
+    .into()
 }
 
 fn appearance_tab(config: Box<Config>, theme: crate::config::Theme) -> Column<'static, Message> {
@@ -806,7 +867,11 @@ fn appearance_tab(config: Box<Config>, theme: crate::config::Theme) -> Column<'s
     .spacing(10)
 }
 
-fn commands_tab(config: Box<Config>, theme: crate::config::Theme) -> Column<'static, Message> {
+fn commands_tab(
+    config: Box<Config>,
+    theme: crate::config::Theme,
+    hotkey_capture: HotkeyCapture,
+) -> Column<'static, Message> {
     Column::from_iter([
         section_header_with_reset("Aliases", ResetField::Aliases, theme.clone()),
         aliases_item(config.aliases.clone(), &theme),
@@ -816,7 +881,7 @@ fn commands_tab(config: Box<Config>, theme: crate::config::Theme) -> Column<'sta
         search_dirs_item(&theme, config.search_dirs.clone()),
         Space::new().height(10).into(),
         section_header_with_reset("Shell commands", ResetField::ShellCommands, theme.clone()),
-        shell_commands_item(config.shells.clone(), theme.clone()),
+        shell_commands_item(config.shells.clone(), theme.clone(), hotkey_capture),
     ])
     .spacing(10)
 }
@@ -1139,9 +1204,17 @@ fn dir_adder_button(dir: &str, theme: Theme) -> Button<'static, Message> {
         .style(move |_, _| settings_add_button_style(&theme.clone()))
 }
 
-fn shell_commands_item(shells: Vec<Shelly>, theme: Theme) -> Element<'static, Message> {
-    let mut col =
-        Column::from_iter(shells.iter().map(|x| x.editable_render(theme.clone()))).spacing(30);
+fn shell_commands_item(
+    shells: Vec<Shelly>,
+    theme: Theme,
+    hotkey_capture: HotkeyCapture,
+) -> Element<'static, Message> {
+    let mut col = Column::from_iter(
+        shells
+            .iter()
+            .map(|shell| shell.editable_render(theme.clone(), hotkey_capture.clone())),
+    )
+    .spacing(30);
 
     let theme_clone = theme.clone();
 
@@ -1164,7 +1237,11 @@ fn shell_commands_item(shells: Vec<Shelly>, theme: Theme) -> Element<'static, Me
 }
 
 impl Shelly {
-    pub fn editable_render(&self, theme: Theme) -> Element<'static, Message> {
+    pub fn editable_render(
+        &self,
+        theme: Theme,
+        hotkey_capture: HotkeyCapture,
+    ) -> Element<'static, Message> {
         let shell = self.to_owned();
         Column::from_iter([
             tuple_row(
@@ -1245,24 +1322,12 @@ impl Shelly {
             .into(),
             tuple_row(
                 shellcommand_hint_text(theme.clone(), "Hotkey"),
-                text_input_cell(
-                    self.hotkey.clone().unwrap_or("".to_string()),
-                    &theme,
-                    "Hotkey",
-                )
-                .on_input({
-                    let shell = shell.clone();
-                    move |input| {
-                        let old = shell.clone();
-                        let mut new = old.clone();
-                        new.hotkey = Some(input);
-                        Message::SetConfig(SetConfigFields::ShellCommands(Editable::Update {
-                            old,
-                            new,
-                        }))
-                    }
-                })
-                .into(),
+                hotkey_field(
+                    self.hotkey.as_deref().unwrap_or(""),
+                    HotkeyTarget::Shell(shell.clone()),
+                    &hotkey_capture,
+                    theme.clone(),
+                ),
             )
             .into(),
             tuple_row(

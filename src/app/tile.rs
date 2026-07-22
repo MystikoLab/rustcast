@@ -3,7 +3,7 @@ pub mod elm;
 pub mod update;
 
 use crate::app::apps::App;
-use crate::app::{ArrowKey, Message, Move, Page};
+use crate::app::{ArrowKey, HotkeyCapture, Message, Move, Page};
 use crate::autoupdate::new_version_available;
 use crate::clipboard::ClipBoardContentType;
 use crate::config::{Config, Shelly};
@@ -205,6 +205,7 @@ pub struct Tile {
     pub settings_tab: crate::app::SettingsTab,
     debouncer: Debouncer,
     pub settings_window: Option<window::Id>,
+    pub hotkey_capture: HotkeyCapture,
     previous_input_source: Option<String>,
     conn: Connection,
 }
@@ -279,34 +280,34 @@ impl Tile {
     /// - Keypresses (escape to close the window)
     /// - Window focus changes
     pub fn subscription(&self) -> Subscription<Message> {
-        let keyboard = event::listen_with(|event, _, id| match event {
-            iced::Event::Keyboard(keyboard::Event::KeyPressed {
-                key: keyboard::Key::Named(keyboard::key::Named::Escape),
-                ..
-            }) => Some(Message::EscKeyPressed(id)),
-            iced::Event::Keyboard(keyboard::Event::KeyPressed {
-                key: keyboard::Key::Character(cha),
-                modifiers: Modifiers::LOGO,
-                ..
-            }) => {
-                if cha.to_string() == "," {
-                    return Some(Message::OpenSettingsWindow);
-                }
-                None
-            }
-            _ => None,
-        });
-        Subscription::batch([
-            Subscription::run(handle_hot_reloading),
-            keyboard,
-            Subscription::run(crate::platform::macos::urlscheme::url_stream),
-            Subscription::run(handle_recipient),
-            Subscription::run(reload_events),
-            Subscription::run(handle_version_and_rankings),
-            Subscription::run(handle_theme_mode),
-            Subscription::run(handle_clipboard_history),
-            Subscription::run(handle_file_search),
-            window::close_events().map(Message::HideWindow),
+        let is_recording_hotkey = self.hotkey_capture.is_recording();
+        let capture_events = if is_recording_hotkey {
+            event::listen_with(|event, _, window| match event {
+                iced::Event::Keyboard(_) => Some(Message::KeyboardEvent { event, window }),
+                _ => None,
+            })
+        } else {
+            Subscription::none()
+        };
+        let window_keyboard = if is_recording_hotkey {
+            Subscription::none()
+        } else {
+            event::listen_with(|event, _, id| match event {
+                iced::Event::Keyboard(keyboard::Event::KeyPressed {
+                    key: keyboard::Key::Named(keyboard::key::Named::Escape),
+                    ..
+                }) => Some(Message::EscKeyPressed(id)),
+                iced::Event::Keyboard(keyboard::Event::KeyPressed {
+                    key: keyboard::Key::Character(cha),
+                    modifiers: Modifiers::LOGO,
+                    ..
+                }) if cha == "," => Some(Message::OpenSettingsWindow),
+                _ => None,
+            })
+        };
+        let keyboard = if is_recording_hotkey {
+            Subscription::none()
+        } else {
             keyboard::listen().filter_map(|event| {
                 if let keyboard::Event::KeyPressed { key, modifiers, .. } = event {
                     match key {
@@ -348,7 +349,21 @@ impl Tile {
                 } else {
                     None
                 }
-            }),
+            })
+        };
+        Subscription::batch([
+            Subscription::run(handle_hot_reloading),
+            capture_events,
+            window_keyboard,
+            Subscription::run(crate::platform::macos::urlscheme::url_stream),
+            Subscription::run(handle_recipient),
+            Subscription::run(reload_events),
+            Subscription::run(handle_version_and_rankings),
+            Subscription::run(handle_theme_mode),
+            Subscription::run(handle_clipboard_history),
+            Subscription::run(handle_file_search),
+            window::close_events().map(Message::HideWindow),
+            keyboard,
             window::events()
                 .with(self.focused)
                 .filter_map(|(focused, (wid, event))| match event {

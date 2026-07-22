@@ -49,6 +49,28 @@ pub enum SettingsTab {
     Commands,
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub enum HotkeyTarget {
+    Toggle,
+    Clipboard,
+    Shell(Shelly),
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum HotkeyCapture {
+    Idle,
+    Recording {
+        target: HotkeyTarget,
+        candidate: Option<Shortcut>,
+    },
+}
+
+impl HotkeyCapture {
+    pub fn is_recording(&self) -> bool {
+        matches!(self, Self::Recording { .. })
+    }
+}
+
 /// Actions that open a native file dialog
 #[derive(Debug, Clone)]
 pub enum FileDialogAction {
@@ -65,22 +87,10 @@ pub enum ResetField {
     Placeholder,
     SearchUrl,
     DebounceDelay,
-    StartAtLogin,
-    AutoUpdate,
-    HapticFeedback,
-    ShowMenubarIcon,
-    ClipboardHistory,
-    ClipboardPasteOnSelect,
-    MainPage,
-    ShowScrollbar,
-    ClearOnHide,
-    ClearOnEnter,
-    ShowIcons,
     Font,
     EventDuration,
     TextColor,
     BackgroundColor,
-    ThemeMode,
     Aliases,
     Modes,
     SearchDirs,
@@ -169,6 +179,16 @@ pub enum Message {
     SimulatePaste(i32),
     OpenSettingsWindow,
     SettingsWindowOpened(window::Id),
+    KeyboardEvent {
+        event: iced::Event,
+        window: window::Id,
+    },
+    BeginHotkeyCapture(HotkeyTarget),
+    HotkeyCaptureKeyPressed {
+        physical_key: iced::keyboard::key::Physical,
+        modifiers: iced::keyboard::Modifiers,
+    },
+    FinishHotkeyCapture,
     LoadClipboardData(u32),
 }
 
@@ -176,8 +196,6 @@ pub enum Message {
 #[allow(unused)]
 pub enum SetConfigFields {
     ToDefault,
-    ToggleHotkey(String),
-    ClipboardHotkey(String),
     SetPosition(Position),
     PlaceHolder(String),
     SearchUrl(String),

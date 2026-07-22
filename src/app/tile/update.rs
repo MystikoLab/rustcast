@@ -21,6 +21,7 @@ use url::Url;
 
 use crate::app::Editable;
 use crate::app::FileDialogAction;
+use crate::app::HotkeyTarget;
 use crate::app::ResetField;
 use crate::app::SetConfigBufferFields;
 use crate::app::SetConfigFields;
@@ -36,7 +37,7 @@ use crate::app::menubar::menu_builder;
 use crate::app::menubar::menu_icon;
 use crate::app::settings_window_settings;
 use crate::app::tile::AppIndex;
-use crate::app::{Message, Page, tile::Tile};
+use crate::app::{HotkeyCapture, Message, Page, tile::Tile};
 use crate::autoupdate::download_latest_app;
 
 use crate::clipboard::ClipBoardContentType;
@@ -110,6 +111,61 @@ fn message_for_open_command(command: &AppCommand) -> Message {
         AppCommand::Function(func) => Message::RunFunction(func.clone()),
         AppCommand::Message(msg) => msg.clone(),
         AppCommand::Display => Message::ReturnFocus,
+    }
+}
+
+fn refresh_global_handler(tile: &mut Tile) {
+    let Some(sender) = tile.sender.clone() else {
+        return;
+    };
+
+    tile.hotkeys.handle = None;
+    match global_handler(sender, tile.hotkeys.all_hotkeys()) {
+        Ok(handle) => tile.hotkeys.handle = Some(handle),
+        Err(error) => {
+            log::error!("Error when registering hotkey: {error}");
+            std::process::exit(1);
+        }
+    }
+}
+
+fn sync_shell_hotkeys(tile: &mut Tile) {
+    tile.hotkeys.shells = tile
+        .config
+        .shells
+        .iter()
+        .filter_map(|shell| {
+            shell
+                .hotkey
+                .as_deref()
+                .and_then(|hotkey| Shortcut::parse(hotkey).ok())
+                .map(|hotkey| (hotkey, shell.clone()))
+        })
+        .collect();
+}
+
+fn is_available_hotkey(
+    tile: &Tile,
+    target: &crate::app::HotkeyTarget,
+    shortcut: &Shortcut,
+) -> bool {
+    match target {
+        HotkeyTarget::Toggle => {
+            shortcut != &tile.hotkeys.clipboard_hotkey
+                && !tile.hotkeys.shells.contains_key(shortcut)
+        }
+        HotkeyTarget::Clipboard => {
+            shortcut != &tile.hotkeys.toggle && !tile.hotkeys.shells.contains_key(shortcut)
+        }
+        HotkeyTarget::Shell(shell) => {
+            shortcut != &tile.hotkeys.toggle
+                && shortcut != &tile.hotkeys.clipboard_hotkey
+                && tile
+                    .hotkeys
+                    .shells
+                    .get(shortcut)
+                    .is_none_or(|existing| existing == shell)
+        }
     }
 }
 
@@ -210,13 +266,7 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
         }
         Message::SetSender(sender) => {
             tile.sender = Some(sender.clone());
-            match global_handler(sender.clone(), tile.hotkeys.all_hotkeys()) {
-                Ok(a) => tile.hotkeys.handle = Some(a),
-                Err(e) => {
-                    log::error!("Error when registering hotkey: {e}");
-                    std::process::exit(1);
-                }
-            };
+            refresh_global_handler(tile);
             if tile.config.show_trayicon {
                 tile.tray_icon = Some(menu_icon(tile.config.clone(), sender));
             }
@@ -572,7 +622,12 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
                 return Task::none();
             }
             if tile.settings_window == Some(a) {
+                let was_recording = tile.hotkey_capture.is_recording();
                 tile.settings_window = None;
+                tile.hotkey_capture = HotkeyCapture::Idle;
+                if was_recording {
+                    refresh_global_handler(tile);
+                }
                 return Task::none();
             }
             info!("Hiding RustCast window");
@@ -844,10 +899,9 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
             }
         }
         Message::SetConfig(config) => {
+            let shell_commands_changed = matches!(&config, SetConfigFields::ShellCommands(_));
             let mut final_config = tile.config.clone();
             match config.clone() {
-                SetConfigFields::ToggleHotkey(hk) => final_config.toggle_hotkey = hk,
-                SetConfigFields::ClipboardHotkey(hk) => final_config.clipboard_hotkey = hk,
                 SetConfigFields::ClipboardHistory(cbhist) => final_config.cbhist = cbhist,
                 SetConfigFields::Modes(Editable::Create((key, value))) => {
                     final_config.modes.insert(key, value);
@@ -1000,11 +1054,19 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
             };
 
             tile.config = final_config;
+            if shell_commands_changed {
+                sync_shell_hotkeys(tile);
+                refresh_global_handler(tile);
+            }
             tile.theme = tile.config.theme.clone().into();
             Task::none()
         }
         Message::ResetField(field) => {
             let default = Config::default();
+            let reset_hotkey = matches!(
+                field,
+                ResetField::ToggleHotkey | ResetField::ClipboardHotkey
+            );
             match field {
                 ResetField::ToggleHotkey => tile.config.toggle_hotkey = default.toggle_hotkey,
                 ResetField::ClipboardHotkey => {
@@ -1013,30 +1075,6 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
                 ResetField::Placeholder => tile.config.placeholder = default.placeholder,
                 ResetField::SearchUrl => tile.config.search_url = default.search_url,
                 ResetField::DebounceDelay => tile.config.debounce_delay = default.debounce_delay,
-                ResetField::StartAtLogin => tile.config.start_at_login = default.start_at_login,
-                ResetField::AutoUpdate => tile.config.auto_update = default.auto_update,
-                ResetField::HapticFeedback => tile.config.haptic_feedback = default.haptic_feedback,
-                ResetField::ShowMenubarIcon => tile.config.show_trayicon = default.show_trayicon,
-                ResetField::ClipboardHistory => tile.config.cbhist = default.cbhist,
-                ResetField::MainPage => tile.config.main_page = default.main_page,
-                ResetField::ThemeMode => {
-                    tile.config.theme.theme_mode = default.theme.theme_mode;
-                    let is_dark = crate::platform::macos::is_dark_mode();
-                    let (text, bg, secondary) = default.theme.theme_mode.presets(is_dark);
-                    tile.config.theme.text_color = text;
-                    tile.config.theme.background_color = bg;
-                    tile.config.theme.secondary_bg_color = secondary;
-                }
-                ResetField::ShowScrollbar => {
-                    tile.config.theme.show_scroll_bar = default.theme.show_scroll_bar
-                }
-                ResetField::ClearOnHide => {
-                    tile.config.buffer_rules.clear_on_hide = default.buffer_rules.clear_on_hide
-                }
-                ResetField::ClearOnEnter => {
-                    tile.config.buffer_rules.clear_on_enter = default.buffer_rules.clear_on_enter
-                }
-                ResetField::ShowIcons => tile.config.theme.show_icons = default.theme.show_icons,
                 ResetField::Font => tile.config.theme.font = default.theme.font,
                 ResetField::EventDuration => tile.config.event_duration = default.event_duration,
                 ResetField::TextColor => tile.config.theme.text_color = default.theme.text_color,
@@ -1047,9 +1085,19 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
                 ResetField::Modes => tile.config.modes = default.modes,
                 ResetField::SearchDirs => tile.config.search_dirs = default.search_dirs,
                 ResetField::ShellCommands => tile.config.shells = default.shells,
-                ResetField::ClipboardPasteOnSelect => {
-                    tile.config.cbhist_paste_on_select = default.cbhist_paste_on_select
+            }
+            if reset_hotkey {
+                if let Ok(shortcut) = Shortcut::parse(&tile.config.toggle_hotkey) {
+                    tile.hotkeys.toggle = shortcut;
                 }
+                if let Ok(shortcut) = Shortcut::parse(&tile.config.clipboard_hotkey) {
+                    tile.hotkeys.clipboard_hotkey = shortcut;
+                }
+                refresh_global_handler(tile);
+            }
+            if field == ResetField::ShellCommands {
+                sync_shell_hotkeys(tile);
+                refresh_global_handler(tile);
             }
             tile.theme = tile.config.theme.clone().into();
             Task::none()
@@ -1115,6 +1163,87 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
             }
         }
         Message::SettingsWindowOpened(_id) => Task::none(),
+        Message::KeyboardEvent { event, window } => {
+            if tile.hotkey_capture.is_recording() && tile.settings_window == Some(window) {
+                return match event {
+                    iced::Event::Keyboard(iced::keyboard::Event::KeyPressed {
+                        key: iced::keyboard::Key::Named(iced::keyboard::key::Named::Escape),
+                        ..
+                    }) => Task::done(Message::FinishHotkeyCapture),
+                    iced::Event::Keyboard(iced::keyboard::Event::KeyPressed {
+                        physical_key,
+                        modifiers,
+                        repeat: false,
+                        ..
+                    }) => Task::done(Message::HotkeyCaptureKeyPressed {
+                        physical_key,
+                        modifiers,
+                    }),
+                    _ => Task::none(),
+                };
+            }
+            Task::none()
+        }
+        Message::BeginHotkeyCapture(target) => {
+            tile.hotkey_capture = HotkeyCapture::Recording {
+                target,
+                candidate: None,
+            };
+            tile.hotkeys.handle = None;
+            Task::none()
+        }
+        Message::HotkeyCaptureKeyPressed {
+            physical_key,
+            modifiers,
+        } => {
+            if let HotkeyCapture::Recording { candidate, .. } = &mut tile.hotkey_capture
+                && let Some(shortcut) = Shortcut::from_iced(physical_key, modifiers)
+            {
+                *candidate = Some(shortcut);
+            }
+            Task::none()
+        }
+        Message::FinishHotkeyCapture => {
+            let captured = if let HotkeyCapture::Recording {
+                target,
+                candidate: Some(shortcut),
+            } = &tile.hotkey_capture
+            {
+                Some((target.clone(), shortcut.clone()))
+            } else {
+                None
+            };
+
+            if let Some((target, shortcut)) = captured
+                && is_available_hotkey(tile, &target, &shortcut)
+            {
+                match target {
+                    HotkeyTarget::Toggle => {
+                        tile.config.toggle_hotkey = shortcut.to_config_string();
+                        tile.hotkeys.toggle = shortcut;
+                    }
+                    HotkeyTarget::Clipboard => {
+                        tile.config.clipboard_hotkey = shortcut.to_config_string();
+                        tile.hotkeys.clipboard_hotkey = shortcut;
+                    }
+                    HotkeyTarget::Shell(shell) => {
+                        if let Some(updated_shell) = tile
+                            .config
+                            .shells
+                            .iter_mut()
+                            .find(|existing| **existing == shell)
+                        {
+                            updated_shell.hotkey = Some(shortcut.to_config_string());
+                            tile.hotkeys.shells.retain(|_, existing| existing != &shell);
+                            tile.hotkeys.shells.insert(shortcut, updated_shell.clone());
+                        }
+                    }
+                }
+            }
+            tile.hotkey_capture = HotkeyCapture::Idle;
+            refresh_global_handler(tile);
+            Task::none()
+        }
     }
 }
 
@@ -1474,6 +1603,7 @@ mod tests {
             settings_tab: crate::app::SettingsTab::General,
             debouncer: crate::debounce::Debouncer::new(10),
             settings_window: None,
+            hotkey_capture: HotkeyCapture::Idle,
             previous_input_source: None,
             conn: initialise_database(),
         }
