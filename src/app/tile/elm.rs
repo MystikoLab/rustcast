@@ -22,6 +22,7 @@ use crate::app::tile::{AppIndex, Hotkeys};
 use crate::app::{DEFAULT_WINDOW_HEIGHT, HotkeyCapture, SettingsTab, ToApp, ToApps};
 use crate::config::Theme;
 use crate::debounce::Debouncer;
+use crate::extensions::ExtensionEngine;
 use crate::platform::macos::events::Event;
 use crate::styles::{
     contents_style, glass_border, glass_surface, results_scrollbar_style, rustcast_text_input_style,
@@ -98,6 +99,7 @@ pub fn new(hotkeys: Hotkeys, config: &Config) -> (Tile, Task<Message>) {
             options,
             hotkeys,
             events,
+            extension_apps: AppIndex::empty(),
             emoji_apps: AppIndex::from_apps(App::emoji_apps()),
             visible: true,
             frontmost: None,
@@ -108,6 +110,7 @@ pub fn new(hotkeys: Hotkeys, config: &Config) -> (Tile, Task<Message>) {
             clipboard_content: vec![],
             tray_icon: None,
             sender: None,
+            extension_engine: None,
             page: Page::Main,
             height: DEFAULT_WINDOW_HEIGHT,
             file_search_sender: None,
