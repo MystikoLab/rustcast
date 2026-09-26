@@ -27,14 +27,9 @@
   </a>
 </p>
 
-<p align="center">
-  <a href="https://sxitch.app">
-    <img src="https://sxitch.app/sxitch_icon_nobg_white.png" width="32" height="32" alt="Sxitch" style="vertical-align: middle;" />
-    &nbsp;
-    <strong>Like RustCast? Check out Sxitch</strong>
-    &nbsp;
-  </a>
-</p>
+
+> [!IMPORTANT]  
+> Rustcast is no longer being maintained. I use [tinycast](https://tinycast.dev/) now. Another good alternative I know off is [Tuna](https://tunaformac.com) but that's inspired by Quicksilver, and is closed source.
 
 > [Those who sponsor me also get a personal easter egg inside RustCast](https://github.com/sponsors/MystikoLab)
 
