@@ -29,7 +29,7 @@
 
 
 > [!IMPORTANT]  
-> Rustcast is no longer being maintained. I use [tinycast](https://tinycast.dev/) now. Another good alternative I know off is [Tuna](https://tunaformac.com) but that's inspired by Quicksilver, and is closed source.
+> Rustcast is no longer being maintained. I was recommending Tinycast, but the dev seems to take bug reports as "bad", but now I've decided to become a contributor to [Floe](https://github.com/Thaw-app/Floe). Another good alternative I know off is [Tuna](https://tunaformac.com) but that's inspired by Quicksilver, and is closed source.
 
 > [Those who sponsor me also get a personal easter egg inside RustCast](https://github.com/sponsors/MystikoLab)
 
