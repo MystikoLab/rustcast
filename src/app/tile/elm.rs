@@ -119,7 +119,11 @@ pub fn new(hotkeys: Hotkeys, config: &Config) -> (Tile, Task<Message>) {
             previous_input_source: None,
             conn,
         },
-        Task::batch([open, Task::done(Message::LoadClipboardData(300))]),
+        Task::batch([
+            open,
+            Task::done(Message::LoadClipboardData(300)),
+            Task::done(Message::LoadRanking),
+        ]),
     )
 }
 

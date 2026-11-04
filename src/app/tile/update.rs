@@ -700,7 +700,7 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
 
             tile.hotkeys.shells = shell_map;
 
-            Task::none()
+            Task::done(Message::LoadRanking)
         }
         Message::ClearSearchResults => {
             tile.results = Vec::new();
